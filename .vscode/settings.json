@@ -1,0 +1,6 @@
+{
+    "material-icon-theme.folders.associations": {
+        "mocker_cli": "PowerShell",
+        "mocker_web": "Flutter",
+    },
+}
