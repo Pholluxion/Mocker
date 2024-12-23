@@ -1,0 +1,23 @@
+name: server
+description: A server app using the shelf package and Docker.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  args: ^2.4.0
+  shared:
+    path: ../shared
+  shelf: ^1.4.0
+  shelf_router: ^1.1.0
+  data: ^0.13.0
+  shelf_web_socket: ^2.0.1
+  web_socket_channel: ^3.0.1
+  mqtt_client: ^10.6.1
+
+dev_dependencies:
+  http: ^1.1.0
+  lints: ^4.0.0
+  test: ^1.24.0
