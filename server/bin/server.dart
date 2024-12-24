@@ -6,8 +6,8 @@ import 'package:shelf_router/shelf_router.dart';
 import 'package:server/server.dart';
 
 void main(List<String> args) async {
-  final ip = InternetAddress.anyIPv4;
-  final port = int.parse(Platform.environment['PORT'] ?? '8090');
+  final ip = InternetAddress.anyIPv6;
+  final port = int.parse(Platform.environment['SERVER_PORT'] ?? '8090');
 
   final router = Router();
 

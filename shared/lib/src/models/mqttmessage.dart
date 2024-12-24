@@ -1,5 +1,5 @@
-import 'package:intl/intl.dart';
 import 'package:shared/src/models/models.dart';
+import 'package:shared/src/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
 class MqttMessage {
@@ -46,7 +46,7 @@ class MqttMessage {
         'status': status,
         'alert': alert,
         'topic': topic,
-        'timestamp': DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
+        'timestamp': XDateTime.formatDateTime,
         'values': values,
       };
 

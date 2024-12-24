@@ -66,8 +66,7 @@ abstract class Closable {
 }
 
 /// A class that manages the state of the application.
-abstract class Pipe<State extends Message>
-    implements MessageEmitter<State>, EventHandler, Closable, EventTransformer {
+abstract class Pipe<State extends Message> implements MessageEmitter<State>, EventHandler, Closable, EventTransformer {
   /// The socket channel.
   final WebSocketChannel _webSocketChannel;
 
@@ -104,8 +103,7 @@ abstract class Pipe<State extends Message>
   @override
   bool get isClosed => _isClosed;
 
-  Pipe(this._webSocketChannel, {required State initialState})
-      : _state = initialState {
+  Pipe(this._webSocketChannel, {required State initialState}) : _state = initialState {
     /// Initialize the MQTT client.
     _mqttClient = MQTTClient.defaultClient();
 
@@ -143,11 +141,6 @@ abstract class Pipe<State extends Message>
     /// Connect to the MQTT broker.
     if (_mqttClient.isConnected) return;
 
-    this._mqttClient = MQTTClient(
-      broker: event.getStringParam('brokerHost'),
-      port: event.getIntParam('brokerPort'),
-      topic: event.getStringParam('brokerTopic'),
-    );
     unawaited(_mqttClient.connect());
   }
 

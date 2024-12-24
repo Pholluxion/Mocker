@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
@@ -17,25 +19,37 @@ class MQTTClient {
     _client = MqttServerClient(broker, clientId)
       ..port = port
       ..logging(on: false)
-      ..keepAlivePeriod = 20
       ..onDisconnected = _onDisconnected
       ..onConnected = _onConnected
       ..onSubscribed = _onSubscribed;
   }
 
   factory MQTTClient.defaultClient() {
-    return MQTTClient(broker: 'localhost', port: 1883, topic: 'mocker');
+    final host = Platform.environment['BROKER_HOST'] ?? 'mosquitto';
+    final port = int.parse(Platform.environment['BROKER_PORT'] ?? '1883');
+    return MQTTClient(broker: host, port: port, topic: 'device-messages');
   }
 
-  bool get isConnected => _client.connectionStatus != null
-      ? _client.connectionStatus!.state == MqttConnectionState.connected
-      : false;
+  MQTTClient copyWith({
+    String? broker,
+    int? port,
+    String? clientId,
+    String? topic,
+  }) {
+    return MQTTClient(
+      broker: broker ?? this.broker,
+      port: port ?? this.port,
+      clientId: clientId ?? this.clientId,
+      topic: topic ?? this.topic,
+    );
+  }
+
+  bool get isConnected =>
+      _client.connectionStatus != null ? _client.connectionStatus!.state == MqttConnectionState.connected : false;
 
   Future<void> connect({String? username, String? password}) async {
-    _client.connectionMessage = MqttConnectMessage()
-        .withClientIdentifier(clientId)
-        .startClean()
-        .withWillQos(MqttQos.atLeastOnce);
+    _client.connectionMessage =
+        MqttConnectMessage().withClientIdentifier(clientId).startClean().withWillQos(MqttQos.atLeastOnce);
 
     try {
       print('Connecting to MQTT broker...');
@@ -58,8 +72,7 @@ class MQTTClient {
     _client.updates?.listen(
       (List<MqttReceivedMessage<MqttMessage>> messages) {
         final message = messages.first.payload as MqttPublishMessage;
-        final payload =
-            MqttPublishPayload.bytesToStringAsString(message.payload.message);
+        final payload = MqttPublishPayload.bytesToStringAsString(message.payload.message);
         print('Received message: $payload from topic: ${messages.first.topic}');
       },
     );

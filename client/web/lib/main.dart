@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared/shared.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -25,6 +26,12 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       title: 'Mocker',
       home: _Home(),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [Locale('es', 'CO')],
     );
   }
 }
@@ -40,9 +47,17 @@ class _HomeState extends State<_Home> {
   late WebSocketChannel channel;
   @override
   void initState() {
-    channel =
-        WebSocketChannel.connect(Uri.parse('ws://localhost:8090/continuous'));
     super.initState();
+    connect();
+  }
+
+  void connect() async {
+    const serverPort = int.fromEnvironment('SERVER_PORT', defaultValue: 8090);
+    const serverHost = String.fromEnvironment('SERVER_HOST', defaultValue: 'localhost');
+
+    final uri = Uri.parse('ws://$serverHost:$serverPort/continuous');
+    channel = WebSocketChannel.connect(uri);
+    await channel.ready;
   }
 
   @override
@@ -60,7 +75,7 @@ class _HomeState extends State<_Home> {
                 final Event event = Event(
                   event: 'startMQTTService',
                   parameters: [
-                    Param(key: 'brokerHost', value: 'localhost'),
+                    Param(key: 'brokerHost', value: 'mosquitto'),
                     Param(key: 'brokerPort', value: '1883'),
                     Param(key: 'brokerTopic', value: 'device-messages'),
                   ],
@@ -99,6 +114,8 @@ class _HomeState extends State<_Home> {
                   parameters: [
                     Param(key: 'deviceUUID', value: '1'),
                     Param(key: 'topic', value: 'temperature'),
+                    Param(key: 'status', value: 'OK'),
+                    Param(key: 'alert', value: 'false'),
                     Param(key: 'times', value: '20'),
                     Param(key: 'duration', value: '1000'),
                     Param(key: 'name', value: 'normal'),

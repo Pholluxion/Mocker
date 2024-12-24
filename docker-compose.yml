@@ -1,0 +1,29 @@
+services:
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    env_file: .env
+    environment:
+      - SERVER_PORT=${SERVER_PORT}
+      - BROKER_PORT=${BROKER_PORT}
+      - BROKER_HOST=${BROKER_HOST}
+    ports:
+      - 8090:8090
+    networks:
+      - smart_campus_core_iot_campus_uis
+  web:
+    depends_on:
+      - server
+    build:
+      context: ./client/web
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    networks:
+      - smart_campus_core_iot_campus_uis
+
+networks: 
+  smart_campus_core_iot_campus_uis:
+    external: true

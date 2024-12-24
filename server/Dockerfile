@@ -1,21 +1,28 @@
-# Use latest stable channel SDK.
+# Usa la última versión estable de Dart
 FROM dart:stable AS build
 
-# Resolve app dependencies.
+# Establece el directorio de trabajo
 WORKDIR /app
-COPY pubspec.* ./
+
+# Copia todo el contenido del contexto (incluyendo 'server' y 'shared')
+COPY . /app/
+
+# Establece el directorio de trabajo para la aplicación
+WORKDIR /app/server
+
+# Resuelve las dependencias de la app
 RUN dart pub get
 
-# Copy app source code (except anything in .dockerignore) and AOT compile app.
-COPY . .
+# Compila el binario AOT
 RUN dart compile exe bin/server.dart -o bin/server
 
-# Build minimal serving image from AOT-compiled `/server`
-# and the pre-built AOT-runtime in the `/runtime/` directory of the base image.
+# Construye una imagen mínima con el binario AOT
 FROM scratch
 COPY --from=build /runtime/ /
-COPY --from=build /app/bin/server /app/bin/
+COPY --from=build /app/server/bin/server /app/bin/
 
-# Start server.
-EXPOSE 8080
-CMD ["/app/bin/server"]
+# Expone el puerto y ejecuta el servidor
+EXPOSE ${SERVER_PORT}
+
+# Establece las variables de entorno
+CMD ["/app/bin/server", "--dart-define=SERVER_PORT=${SERVER_PORT}", "--dart-define=BROKER_HOST=${BROKER_HOST}", "--dart-define=BROKER_PORT=${BROKER_PORT}"]
