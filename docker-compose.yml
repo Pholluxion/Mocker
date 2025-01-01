@@ -10,7 +10,7 @@ services:
       - BROKER_PORT=${BROKER_PORT}
       - BROKER_HOST=${BROKER_HOST}
     ports:
-      - 8090:8090
+      - ${SERVER_PORT}:${SERVER_PORT}
     networks:
       - smart_campus_core_iot_campus_uis
   web:
