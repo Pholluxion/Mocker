@@ -12,61 +12,56 @@ class DiscreteDistributionValue extends Message<int> {
 }
 
 class DiscreteDistributionPipe extends Pipe<DiscreteDistributionValue> {
-  DiscreteDistributionPipe(super.socketChannel)
-      : super(initialState: DiscreteDistributionValue()) {
-    /// Registering the handlers for the events.
+  DiscreteDistributionPipe(super.socketChannel) : super(initialState: DiscreteDistributionValue()) {
+    /// Registering the handlers for the mocks.
     ///
-    /// The `on` method registers a handler for an event.
-    /// The `loop` method registers a handler for an event that repeats every duration.
-    /// The `repeat` method registers a handler for an event that repeats times every duration.
+    /// The `on` method registers a handler for an mock.
+    /// The `loop` method registers a handler for an mock that repeats every duration.
+    /// The `repeat` method registers a handler for an mock that repeats times every duration.
     loop('bernoulli', bernoulliSample);
     loop('binomial', binomialSample);
     loop('poisson', poissonSample);
     loop('uniform', uniformSample);
   }
 
-  void uniformSample(Event event) {
-    final a = event.getIntParam('a');
-    final b = event.getIntParam('b');
-    final name = event.getStringParam('name');
+  void uniformSample(Mock mock) {
+    final a = mock.getIntParam('a');
+    final b = mock.getIntParam('b');
 
     final value = UniformDiscreteDistribution(a, b).sample();
 
-    final state = DiscreteDistributionValue(name: name, value: value);
+    final state = DiscreteDistributionValue(name: mock.name, value: value);
 
     emit(state);
   }
 
-  void bernoulliSample(Event event) {
-    final p = event.getDoubleParam('p');
-    final name = event.getStringParam('name');
+  void bernoulliSample(Mock mock) {
+    final p = mock.getDoubleParam('p');
 
     final value = BernoulliDistribution(p).sample();
 
-    final state = DiscreteDistributionValue(name: name, value: value);
+    final state = DiscreteDistributionValue(name: mock.name, value: value);
 
     emit(state);
   }
 
-  void binomialSample(Event event) {
-    final n = event.getIntParam('n');
-    final p = event.getDoubleParam('p');
-    final name = event.getStringParam('name');
+  void binomialSample(Mock mock) {
+    final n = mock.getIntParam('n');
+    final p = mock.getDoubleParam('p');
 
     final value = BinomialDistribution(n, p).sample();
 
-    final state = DiscreteDistributionValue(name: name, value: value);
+    final state = DiscreteDistributionValue(name: mock.name, value: value);
 
     emit(state);
   }
 
-  void poissonSample(Event event) {
-    final lambda = event.getDoubleParam('lambda');
-    final name = event.getStringParam('name');
+  void poissonSample(Mock mock) {
+    final lambda = mock.getDoubleParam('lambda');
 
     final value = PoissonDistribution(lambda).sample();
 
-    final state = DiscreteDistributionValue(name: name, value: value);
+    final state = DiscreteDistributionValue(name: mock.name, value: value);
 
     emit(state);
   }

@@ -2,41 +2,42 @@ import 'package:shared/src/models/models.dart';
 import 'package:shared/src/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
-class MqttMessage {
+class Payload {
   final bool alert;
   final String id;
   final String deviceUUID;
   final String status;
   final String topic;
-  final String timestamp;
+  final String timeStamp;
   final Map<String, dynamic> values;
 
-  MqttMessage({
+  Payload({
     required this.deviceUUID,
     required this.topic,
     this.id = '',
     this.status = 'OK',
     this.alert = false,
-    this.timestamp = '',
+    this.timeStamp = '',
     this.values = const {},
   });
 
-  factory MqttMessage.fromEvent(Event event) {
-    return MqttMessage(
-      deviceUUID: event.getStringParam('deviceUUID'),
-      topic: event.getStringParam('topic'),
-      status: event.getStringParam('status'),
-      alert: event.getBoolParam('alert'),
+  factory Payload.fromMock(Mock mock) {
+    return Payload(
+      deviceUUID: mock.getStringParam('deviceUUID'),
+      topic: mock.getStringParam('topic'),
+      status: mock.getStringParam('status'),
+      alert: mock.getBoolParam('alert'),
+      timeStamp: XDateTime.formatDateTime,
     );
   }
 
-  factory MqttMessage.fromJson(Map<String, dynamic> json) => MqttMessage(
+  factory Payload.fromJson(Map<String, dynamic> json) => Payload(
         id: json['id'] as String? ?? Uuid().v4(),
         deviceUUID: json['deviceUUID'] as String,
         status: json['status'] as String,
         alert: json['alert'] as bool,
         topic: json['topic'] as String,
-        timestamp: json['timestamp'] as String? ?? '',
+        timeStamp: json['timeStamp'] as String? ?? '',
         values: json['values'] as Map<String, dynamic>? ?? {},
       );
 
@@ -46,26 +47,26 @@ class MqttMessage {
         'status': status,
         'alert': alert,
         'topic': topic,
-        'timestamp': XDateTime.formatDateTime,
+        'timeStamp': XDateTime.formatDateTime,
         'values': values,
       };
 
-  MqttMessage copyWith({
+  Payload copyWith({
     String? id,
     String? deviceUUID,
     String? status,
     bool? alert,
     String? topic,
-    String? timestamp,
+    String? timeStamp,
     Map<String, dynamic>? values,
   }) {
-    return MqttMessage(
+    return Payload(
       id: id ?? this.id,
       deviceUUID: deviceUUID ?? this.deviceUUID,
       status: status ?? this.status,
       alert: alert ?? this.alert,
       topic: topic ?? this.topic,
-      timestamp: timestamp ?? this.timestamp,
+      timeStamp: timeStamp ?? this.timeStamp,
       values: values ?? this.values,
     );
   }

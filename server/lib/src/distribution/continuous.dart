@@ -17,9 +17,8 @@ class ContinuousDistributionValue extends Message<double> {
 }
 
 class ContinuousDistributionPipe extends Pipe<ContinuousDistributionValue> {
-  ContinuousDistributionPipe(super.socketChannel)
-      : super(initialState: ContinuousDistributionValue()) {
-    /// Registering the handlers for the events.
+  ContinuousDistributionPipe(super.socketChannel) : super(initialState: ContinuousDistributionValue()) {
+    /// Registering the handlers for the mocks.
 
     /// Generating a normal distribution stream.
     loop('normal', normalSample);
@@ -40,37 +39,34 @@ class ContinuousDistributionPipe extends Pipe<ContinuousDistributionValue> {
     on('exponentialSample', exponentialSample);
   }
 
-  void normalSample(Event event) {
-    final mu = event.getDoubleParam('mu');
-    final sigma = event.getDoubleParam('sigma');
-    final name = event.getStringParam('name');
+  void normalSample(Mock mock) {
+    final mu = mock.getDoubleParam('mu');
+    final sigma = mock.getDoubleParam('sigma');
 
     final value = NormalDistribution(mu, sigma).sample();
 
-    final state = ContinuousDistributionValue(name: name, value: value);
+    final state = ContinuousDistributionValue(name: mock.name, value: value);
 
     emit(state);
   }
 
-  void uniformSample(Event event) {
-    final a = event.getDoubleParam('a');
-    final b = event.getDoubleParam('b');
-    final name = event.getStringParam('name');
+  void uniformSample(Mock mock) {
+    final a = mock.getDoubleParam('a');
+    final b = mock.getDoubleParam('b');
 
     final value = UniformDistribution(a, b).sample();
 
-    final state = ContinuousDistributionValue(name: name, value: value);
+    final state = ContinuousDistributionValue(name: mock.name, value: value);
 
     emit(state);
   }
 
-  void exponentialSample(Event event) {
-    final lambda = event.getDoubleParam('lambda');
-    final name = event.getStringParam('name');
+  void exponentialSample(Mock mock) {
+    final lambda = mock.getDoubleParam('lambda');
 
     final value = ExponentialDistribution(lambda).sample();
 
-    final state = ContinuousDistributionValue(name: name, value: value);
+    final state = ContinuousDistributionValue(name: mock.name, value: value);
 
     emit(state);
   }

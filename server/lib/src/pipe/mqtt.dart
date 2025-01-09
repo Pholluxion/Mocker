@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:faker/faker.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
@@ -14,7 +15,7 @@ class MQTTClient {
     required this.broker,
     required this.port,
     required this.topic,
-    this.clientId = 'mocker_server',
+    required this.clientId,
   }) {
     _client = MqttServerClient(broker, clientId)
       ..port = port
@@ -25,9 +26,15 @@ class MQTTClient {
   }
 
   factory MQTTClient.defaultClient() {
-    final host = Platform.environment['BROKER_HOST'] ?? 'mosquitto';
+    final host = Platform.environment['BROKER_HOST'] ?? 'localhost';
     final port = int.parse(Platform.environment['BROKER_PORT'] ?? '1883');
-    return MQTTClient(broker: host, port: port, topic: 'device-messages');
+    var faker = Faker();
+    return MQTTClient(
+      broker: host,
+      port: port,
+      topic: 'device-messages',
+      clientId: 'mocker_server_${faker.internet.userName()}',
+    );
   }
 
   MQTTClient copyWith({

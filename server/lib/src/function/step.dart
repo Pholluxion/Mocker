@@ -15,11 +15,10 @@ class StepDistribution extends Pipe<StepState> {
     loop('step', stepSample);
   }
 
-  void stepSample(Event event) {
-    final value = event.getIntParam('step');
-    final name = event.getStringParam('name');
+  void stepSample(Mock mock) {
+    final value = mock.getIntParam('step');
 
-    final state = StepState(name: name, value: value);
+    final state = StepState(name: mock.name, value: value);
 
     emit(state);
   }

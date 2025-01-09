@@ -16,6 +16,9 @@ dependencies:
   shelf_web_socket: ^2.0.1
   web_socket_channel: ^3.0.1
   mqtt_client: ^10.6.1
+  shelf_cors_headers: ^0.1.5
+  uuid: ^4.5.1
+  faker: ^2.2.0
 
 dev_dependencies:
   http: ^1.1.0

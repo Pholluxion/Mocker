@@ -24,17 +24,17 @@ abstract class Message<T> extends Object {
   Map<String, dynamic> format() => {name: value};
 }
 
-/// A callback that handles an event.
-typedef EventCallback = void Function(Event event);
+/// A callback that handles an mock.
+typedef EventCallback = void Function(Mock mock);
 
 abstract class EventTransformer {
-  /// method that registers a handler for an event.
+  /// method that registers a handler for an mock.
   void on(String eventKey, EventCallback callback);
 
-  /// method that registers a handler for an event that repeats every duration.
+  /// method that registers a handler for an mock that repeats every duration.
   void loop(String eventKey, EventCallback callback);
 
-  /// method that registers a handler for an event that repeats times every duration.
+  /// method that registers a handler for an mock that repeats times every duration.
   void repeat(String eventKey, EventCallback callback);
 }
 
@@ -47,13 +47,13 @@ abstract class MessageEmitter<State extends Message> {
   void emit(State state);
 }
 
-/// An abstract class that writes events.
+/// An abstract class that writes mocks.
 abstract class EventHandler {
-  /// The current event.
-  Event? get event;
+  /// The current mock.
+  Mock? get mock;
 
-  /// method that handles an event.
-  void handle(dynamic event);
+  /// method that handles an mock.
+  void handle(dynamic mock);
 }
 
 /// An abstract class that closes the StateManager.
@@ -74,12 +74,12 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
   late MQTTClient _mqttClient;
 
   /// The message to be sent to the MQTT broker.
-  late MqttMessage _message;
+  late Payload _message;
 
   /// The subscription to the socket channel.
   late StreamSubscription? _subscription;
 
-  /// The handlers for the events.
+  /// The handlers for the mocks.
   final _handlers = <String, EventCallback>{};
 
   /// Whether the StateManager is closed.
@@ -88,16 +88,16 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
   /// The current state.
   State _state;
 
-  /// The current event.
-  Event? _event;
+  /// The current mock.
+  Mock? _event;
 
   /// Override the state getter.
   @override
   State get state => _state;
 
-  /// Override the event getter.
+  /// Override the mock getter.
   @override
-  Event? get event => _event;
+  Mock? get mock => _event;
 
   /// Override the isClosed getter.
   @override
@@ -110,116 +110,126 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
     /// Listen to the stream of the socket channel.
     _subscription = _webSocketChannel.stream.listen(handle, onDone: close);
 
-    /// Set default handlers for the events.
+    /// Set default handlers for the mocks.
     ///
     /// Close the pipe when the socket is closed.
     on('close', _close);
 
-    /// Stop the pipe when the stop event is received.
+    /// Stop the pipe when the stop mock is received.
     on('stop', _stop);
-
-    /// Start the mqtt service when the start event is received.
-    on('startMQTTService', _startMQTTService);
-
-    /// Stop the mqtt service when the stop event is received.
-    on('stopMQTTService', _stopMQTTService);
   }
 
   /// method that closes the pipe.
-  void _close(Event event) => close();
+  void _close(Mock mock) => close();
 
   /// method that stops the pipe.
-  void _stop(Event event) {
+  void _stop(Mock mock) {
     stdout.writeln('Stopping the pipe...');
   }
 
   /// method that stops the MQTT service.
-  void _stopMQTTService(Event event) => _mqttClient.disconnect();
+  void _stopMQTTService(Mock mock) => _mqttClient.disconnect();
 
   /// method that starts the MQTT service.
-  void _startMQTTService(Event event) {
+  void _startMQTTService(Mock mock) {
     /// Connect to the MQTT broker.
     if (_mqttClient.isConnected) return;
 
     unawaited(_mqttClient.connect());
   }
 
-  /// method that registers a handler for an event.
+  /// method that registers a handler for an mock.
   @override
   void on(String eventKey, EventCallback callback) {
     if (_handlers.containsKey(eventKey)) {
-      throw StateError('Event $event is duplicated.');
+      throw StateError('Event $mock is duplicated.');
     }
 
     _handlers[eventKey] = callback;
   }
 
-  /// method that registers a handler for an event that repeats every duration.
+  /// method that registers a handler for an mock that repeats every duration.
   @override
   void loop(String eventKey, EventCallback callback) {
     if (_handlers.containsKey(eventKey)) {
-      throw StateError('Event $event is duplicated.');
+      throw StateError('Event $mock is duplicated.');
     }
 
-    _handlers[eventKey] = (event) async {
-      while (this.event == event && !isClosed) {
-        callback(event);
-        await Future.delayed(event.duration);
+    _handlers[eventKey] = (mock) async {
+      while (this.mock == mock && !isClosed) {
+        callback(mock);
+        await Future.delayed(mock.duration);
       }
     };
   }
 
-  /// method that registers a handler for an event that repeats times every duration.
+  /// method that registers a handler for an mock that repeats times every duration.
   @override
   void repeat(String eventKey, EventCallback callback) {
     if (_handlers.containsKey(eventKey)) {
-      throw StateError('Event $event is duplicated.');
+      throw StateError('Event $mock is duplicated.');
     }
 
-    _handlers[eventKey] = (event) async {
-      final times = event.getIntParam('times', defaultValue: 1);
+    _handlers[eventKey] = (mock) async {
+      final times = mock.getIntParam('times', defaultValue: 1);
 
       if (times <= 0) {
         throw StateError('Times must be greater than 0.');
       }
 
       for (var i = 0; i < times; i++) {
-        callback(event);
-        await Future.delayed(event.duration);
+        callback(mock);
+        await Future.delayed(mock.duration);
       }
     };
   }
 
-  /// method that handles an event.
+  /// method that handles an mock.
   @override
-  void handle(event) {
-    final newEvent = Event.fromJson(json.decode(event));
+  void handle(mock) {
+    /// Check if the mock is a string.
+    final newEvent = Mock.fromJson(json.decode(mock));
 
+    /// Check if the mock is the same as the current mock.
     if (newEvent == _event) {
       return;
     }
 
-    final handler = _handlers[newEvent.event];
+    /// Get the handler for the mock.
+    final handler = _handlers[newEvent.function];
 
     if (handler != null) {
+      /// Set the new mock.
       _event = newEvent;
 
-      stdout.writeln('Handling event ${newEvent.event}...');
+      /// Start or stop the MQTT service.
+      if (newEvent.mqtt) {
+        _startMQTTService(newEvent);
+      } else {
+        _stopMQTTService(newEvent);
+      }
+
+      stdout.writeln('Handling mock ${newEvent.function}...');
+
+      /// Call the handler for the mock.
       handler(newEvent);
     } else {
-      throw StateError('Event ${newEvent.event} is not handled.');
+      throw StateError('Event ${newEvent.function} is not handled.');
     }
   }
 
   /// method that emits a new state.
   @override
   void emit(State state) {
+    /// Check if the pipe is closed.
     if (isClosed) {
       throw StateError('Cannot emit state after closing the pipe.');
     }
 
+    /// Set the new state.
     _state = state;
 
+    /// Send the state to the socket channel.
     try {
       _sendState(state);
     } catch (e) {
@@ -230,7 +240,10 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
   /// method that sends the state to the socket channel.
   void _sendState(State state) {
     try {
+      /// Send the state to the socket channel.
       _webSocketChannel.sink.add(json.encode(state.toJson()));
+
+      /// Send the state to the MQTT broker.
       _sendToMQTTBroker(state.format());
     } catch (e) {
       stdout.writeln('Cannot send state to the socket channel - skipping. $e');
@@ -239,16 +252,20 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
 
   /// method that sends the state to the MQTT broker.
   void _sendToMQTTBroker(Map<String, dynamic> values) {
+    /// Check if the MQTT client is connected.
     if (!_mqttClient.isConnected) {
       return;
     }
 
+    /// Get the message from the mock.
     if (_event != null) {
-      _message = MqttMessage.fromEvent(_event!);
+      _message = Payload.fromMock(_event!);
     }
 
+    /// Get the message from the state.
     final message = _message.copyWith(values: {...values});
 
+    /// Publish the message to the MQTT broker.
     try {
       _mqttClient.publish(_mqttClient.topic, json.encode(message));
     } catch (e) {
@@ -259,13 +276,22 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
   /// method that closes the StateManager.
   @override
   void close() {
+    /// Check if the pipe is closed.
     if (isClosed) {
       return;
     }
     stdout.writeln('Closing the pipe...');
+
+    /// Set the pipe as closed.
     _isClosed = true;
+
+    /// Cancel the subscription.
     _subscription?.cancel();
+
+    /// Close the socket channel.
     _webSocketChannel.sink.close();
+
+    /// Close the MQTT client.
     _mqttClient.disconnect();
     stdout.writeln('Pipe closed.');
   }

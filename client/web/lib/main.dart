@@ -1,151 +1,65 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:shared/shared.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:get_it/get_it.dart';
 
-class Data {
-  final String name;
-  final dynamic value;
+import 'package:mocker/core/core.dart';
+import 'package:mocker/domain/domain.dart';
+import 'package:mocker/presentation/presentation.dart';
 
-  Data({required this.name, required this.value});
-
-  factory Data.fromJson(Map<String, dynamic> json) {
-    return Data(name: json['name'], value: json['value']);
-  }
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  setupLocator();
+  runApp(const AppRoot());
 }
 
-void main() => runApp(const MyApp());
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+/// The main application widget for this example.
+class AppRoot extends StatelessWidget {
+  /// Creates a const main application widget.
+  const AppRoot({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Mocker',
-      home: _Home(),
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => UserCubit(
+            GetIt.I.get<UserRepository>(),
+          ),
+        ),
+        BlocProvider(
+          create: (context) => ThemeCubit(),
+        ),
       ],
-      supportedLocales: [Locale('es', 'CO')],
+      child: const MockerApp(),
     );
   }
 }
 
-class _Home extends StatefulWidget {
-  const _Home();
-
-  @override
-  State<_Home> createState() => _HomeState();
-}
-
-class _HomeState extends State<_Home> {
-  late WebSocketChannel channel;
-  @override
-  void initState() {
-    super.initState();
-    connect();
-  }
-
-  void connect() async {
-    const serverPort = int.fromEnvironment('SERVER_PORT', defaultValue: 8090);
-    const serverHost = String.fromEnvironment('SERVER_HOST', defaultValue: 'localhost');
-
-    final uri = Uri.parse('ws://$serverHost:$serverPort/continuous');
-    channel = WebSocketChannel.connect(uri);
-    await channel.ready;
-  }
+class MockerApp extends StatelessWidget {
+  const MockerApp({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            FloatingActionButton(
-              onPressed: () {
-                final Event event = Event(
-                  event: 'startMQTTService',
-                  parameters: [
-                    Param(key: 'brokerHost', value: 'mosquitto'),
-                    Param(key: 'brokerPort', value: '1883'),
-                    Param(key: 'brokerTopic', value: 'device-messages'),
-                  ],
-                );
-                channel.sink.add(json.encode(event));
-              },
-              child: const Icon(Icons.connect_without_contact),
-            ),
-            const SizedBox(height: 10),
-            FloatingActionButton(
-              onPressed: () {
-                final Event event = Event(
-                  event: 'stopMQTTService',
-                  parameters: [],
-                );
-                channel.sink.add(json.encode(event));
-              },
-              child: const Icon(Icons.cancel),
-            ),
-            const SizedBox(height: 10),
-            FloatingActionButton(
-              onPressed: () {
-                final Event event = Event(
-                  event: 'stop',
-                  parameters: [],
-                );
-                channel.sink.add(json.encode(event));
-              },
-              child: const Icon(Icons.stop),
-            ),
-            const SizedBox(height: 10),
-            FloatingActionButton(
-              onPressed: () {
-                final Event event = Event(
-                  event: 'normal',
-                  parameters: [
-                    Param(key: 'deviceUUID', value: '1'),
-                    Param(key: 'topic', value: 'temperature'),
-                    Param(key: 'status', value: 'OK'),
-                    Param(key: 'alert', value: 'false'),
-                    Param(key: 'times', value: '20'),
-                    Param(key: 'duration', value: '1000'),
-                    Param(key: 'name', value: 'normal'),
-                    Param(key: 'mu', value: ' 10.0'),
-                    Param(key: 'sigma', value: '2.0'),
-                  ],
-                );
-
-                final raw = json.encode(event);
-
-                channel.sink.add(raw);
-              },
-              child: const Icon(Icons.play_arrow),
-            ),
-          ],
-        ),
-      ),
-      body: Center(
-        child: StreamBuilder(
-          stream: channel.stream,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              final data = Data.fromJson(json.decode(snapshot.data));
-              return Text('${data.name}: ${data.value}');
-            } else {
-              return const CircularProgressIndicator();
-            }
-          },
-        ),
-      ),
+    return MaterialApp.router(
+      restorationScopeId: 'Mocker',
+      debugShowCheckedModeBanner: false,
+      routerConfig: AppRouter.router,
+      localizationsDelegates: const [
+        GlobalWidgetsLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('es', 'CO'),
+        Locale('en', 'US'),
+      ],
+      themeMode: context.select((ThemeCubit cubit) => cubit.state ? ThemeMode.dark : ThemeMode.light),
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
     );
   }
 }
