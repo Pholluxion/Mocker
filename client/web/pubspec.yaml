@@ -31,6 +31,8 @@ dependencies:
   go_router: ^14.6.3
   dynamic_tabbar: ^1.0.9
   fl_chart: ^0.70.1
+  hydrated_bloc: ^9.1.5
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:

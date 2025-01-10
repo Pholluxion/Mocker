@@ -7,8 +7,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'package:mocker/domain/domain.dart';
 
-class MockCubit extends Cubit<SimulationState> {
-  MockCubit(this._docsRepository) : super(const SimulationState());
+class MockCubit extends Cubit<MockState> {
+  MockCubit(this._docsRepository) : super(const MockState());
 
   static const serverPort = int.fromEnvironment('SERVER_PORT', defaultValue: 8090);
   static const serverHost = String.fromEnvironment('SERVER_HOST', defaultValue: 'localhost');
@@ -91,7 +91,7 @@ class MockCubit extends Cubit<SimulationState> {
   }
 }
 
-class SimulationState extends Equatable {
+class MockState extends Equatable {
   final bool mqtt;
   final String id;
   final String name;
@@ -103,7 +103,7 @@ class SimulationState extends Equatable {
   final List<Document> docs;
   final List<Param> parameters;
 
-  const SimulationState({
+  const MockState({
     this.id = '',
     this.name = '',
     this.path = '',
@@ -116,7 +116,7 @@ class SimulationState extends Equatable {
     this.device,
   });
 
-  SimulationState copyWith({
+  MockState copyWith({
     bool? mqtt,
     int? intervalMs,
     String? id,
@@ -128,7 +128,7 @@ class SimulationState extends Equatable {
     List<Document>? docs,
     List<Param>? parameters,
   }) {
-    return SimulationState(
+    return MockState(
       id: id ?? this.id,
       path: path ?? this.path,
       mqtt: mqtt ?? this.mqtt,

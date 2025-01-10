@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:dynamic_tabbar/dynamic_tabbar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:mocker/presentation/presentation.dart';
 
@@ -74,13 +73,6 @@ class _HomePageState extends State<HomePage> {
                 onPressed: context.read<ThemeCubit>().toggle,
               );
             },
-          ),
-          const Gap(8),
-          GestureDetector(
-            onTap: () => context.goNamed(ProfilePage.name),
-            child: const CircleAvatar(
-              child: Icon(Icons.person),
-            ),
           ),
           const Gap(8),
         ],

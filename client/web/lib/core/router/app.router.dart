@@ -9,7 +9,7 @@ import 'package:mocker/presentation/presentation.dart';
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 final GlobalKey<NavigatorState> _homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
-// final GlobalKey<NavigatorState> _moreNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'more');
+final GlobalKey<NavigatorState> _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 final GlobalKey<NavigatorState> _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 
 /// The [AppRouter] maintains the main route configuration for the app.
@@ -102,52 +102,33 @@ class AppRouter {
                   );
                 },
               ),
-              GoRoute(
-                name: DetailModalPage.name,
-                path: DetailModalPage.path,
-                parentNavigatorKey: rootNavigatorKey,
-                pageBuilder: (BuildContext context, GoRouterState state) {
-                  return const MaterialPage<void>(
-                    fullscreenDialog: true,
-                    child: DetailModalPage(),
-                  );
-                },
-              ),
-              GoRoute(
-                path: ProfilePage.path,
-                name: ProfilePage.name,
-                pageBuilder: (BuildContext context, GoRouterState state) {
-                  return const MaterialPage<void>(child: ProfilePage());
-                },
-              ),
+              // GoRoute(
+              //   name: DetailModalPage.name,
+              //   path: DetailModalPage.path,
+              //   parentNavigatorKey: rootNavigatorKey,
+              //   pageBuilder: (BuildContext context, GoRouterState state) {
+              //     return const MaterialPage<void>(
+              //       fullscreenDialog: true,
+              //       child: DetailModalPage(),
+              //     );
+              //   },
+              // ),
             ],
           ),
         ],
       ),
-      // StatefulShellBranch(
-      //   navigatorKey: _moreNavigatorKey,
-      //   routes: <RouteBase>[
-      //     GoRoute(
-      //       name: MorePage.name,
-      //       path: MorePage.path,
-      //       pageBuilder: (BuildContext context, GoRouterState state) {
-      //         return const NoTransitionPage<void>(
-      //           key: ValueKey<String>(MorePage.name),
-      //           child: MorePage(),
-      //         );
-      //       },
-      //       routes: <RouteBase>[
-      //         GoRoute(
-      //           path: ProfilePage.path,
-      //           name: ProfilePage.name,
-      //           pageBuilder: (BuildContext context, GoRouterState state) {
-      //             return const MaterialPage<void>(child: ProfilePage());
-      //           },
-      //         ),
-      //       ],
-      //     ),
-      //   ],
-      // ),
+      StatefulShellBranch(
+        navigatorKey: _profileNavigatorKey,
+        routes: <RouteBase>[
+          GoRoute(
+            path: ProfilePage.path,
+            name: ProfilePage.name,
+            pageBuilder: (BuildContext context, GoRouterState state) {
+              return const MaterialPage<void>(child: ProfilePage());
+            },
+          ),
+        ],
+      ),
       StatefulShellBranch(
         navigatorKey: _settingsNavigatorKey,
         routes: <RouteBase>[
@@ -193,7 +174,7 @@ class ScaffoldShell extends StatelessWidget {
         (StatefulShellBranch e) {
           return switch (e.defaultRoute?.name) {
             HomePage.name => const NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-            // MorePage.name => const NavigationDestination(icon: Icon(Icons.account_circle), label: 'User'),
+            ProfilePage.name => const NavigationDestination(icon: Icon(Icons.account_circle), label: 'Profile'),
             SettingsPage.name => const NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
             _ => throw UnimplementedError(
                 'The route ${e.defaultRoute?.name} is not implemented.',

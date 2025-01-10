@@ -40,29 +40,29 @@ class DetailPage extends StatelessWidget {
   }
 }
 
-/// The detail modal page.
-class DetailModalPage extends StatelessWidget {
-  /// Construct the detail modal page.
-  const DetailModalPage({super.key});
+// /// The detail modal page.
+// class DetailModalPage extends StatelessWidget {
+//   /// Construct the detail modal page.
+//   const DetailModalPage({super.key});
 
-  /// The path for the detail modal page.
-  static const String path = 'detail-modal';
+//   /// The path for the detail modal page.
+//   static const String path = 'detail-modal';
 
-  /// The name for the detail modal page.
-  static const String name = 'DetailModal';
+//   /// The name for the detail modal page.
+//   static const String name = 'DetailModal';
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail Modal Page'),
-      ),
-      body: const Center(
-        child: Text('Detail modal Page'),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Detail Modal Page'),
+//       ),
+//       body: const Center(
+//         child: Text('Detail modal Page'),
+//       ),
+//     );
+//   }
+// }
 
 class ResizableWidget extends StatefulWidget {
   const ResizableWidget({super.key});
@@ -183,7 +183,7 @@ class _SimulationFormState extends State<_SimulationForm>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       spacing: 8,
                       children: [
-                        BlocBuilder<MockCubit, SimulationState>(
+                        BlocBuilder<MockCubit, MockState>(
                           builder: (context, state) {
                             if (state.function.isEmpty) {
                               return const SizedBox.shrink();
@@ -255,7 +255,7 @@ class _SimulationFormState extends State<_SimulationForm>
                         Row(
                           children: [
                             Flexible(
-                              child: BlocBuilder<MockCubit, SimulationState>(
+                              child: BlocBuilder<MockCubit, MockState>(
                                 builder: (context, state) {
                                   return DropdownButtonFormField<String>(
                                     value: state.id.isEmpty ? null : state.id,
@@ -295,7 +295,7 @@ class _SimulationFormState extends State<_SimulationForm>
                           ],
                         ),
                         const Gap(8),
-                        BlocBuilder<MockCubit, SimulationState>(
+                        BlocBuilder<MockCubit, MockState>(
                           builder: (context, state) {
                             if (state.parameters.isEmpty) {
                               return const SizedBox.shrink();
@@ -320,7 +320,7 @@ class _SimulationFormState extends State<_SimulationForm>
                                         ),
                                         Flexible(
                                           flex: 2,
-                                          child: BlocBuilder<MockCubit, SimulationState>(
+                                          child: BlocBuilder<MockCubit, MockState>(
                                             builder: (context, state) {
                                               return TextField(
                                                 key: ValueKey(param.key),
@@ -341,7 +341,7 @@ class _SimulationFormState extends State<_SimulationForm>
                             );
                           },
                         ),
-                        BlocBuilder<MockCubit, SimulationState>(
+                        BlocBuilder<MockCubit, MockState>(
                           builder: (context, state) {
                             if (state.function.isEmpty) {
                               return const SizedBox.shrink();
@@ -369,7 +369,7 @@ class _SimulationFormState extends State<_SimulationForm>
                             );
                           },
                         ),
-                        BlocBuilder<MockCubit, SimulationState>(
+                        BlocBuilder<MockCubit, MockState>(
                           builder: (context, state) {
                             if (state.function.isEmpty) {
                               return const SizedBox.shrink();
@@ -397,7 +397,7 @@ class _SimulationFormState extends State<_SimulationForm>
                             );
                           },
                         ),
-                        BlocBuilder<MockCubit, SimulationState>(
+                        BlocBuilder<MockCubit, MockState>(
                           builder: (context, state) {
                             if (state.function.isEmpty) {
                               return const SizedBox.shrink();
@@ -429,7 +429,7 @@ class _SimulationFormState extends State<_SimulationForm>
                   ),
                 ),
               ),
-              BlocBuilder<MockCubit, SimulationState>(
+              BlocBuilder<MockCubit, MockState>(
                 builder: (context, state) {
                   return SourceCodeViewer<Mock>(data: state.getMock);
                 },
