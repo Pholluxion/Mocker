@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -23,47 +25,39 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   late final TextEditingController _usernameController;
   late final TextEditingController _passwordController;
-  bool _isPasswordVisible = false;
+  late final ValueNotifier<bool> _isPasswordVisible;
 
   @override
   void initState() {
+    //TODO: Remove this line
     _usernameController = TextEditingController(
       text: 'Pholluxion',
     );
+    //TODO: Remove this line
     _passwordController = TextEditingController(
       text: 'qwerty',
     );
+
+    _isPasswordVisible = ValueNotifier<bool>(false);
     super.initState();
   }
 
   void togglePasswordVisibility() {
-    setState(() {
-      _isPasswordVisible = !_isPasswordVisible;
-    });
+    _isPasswordVisible.value = !_isPasswordVisible.value;
   }
 
   void validate() async {
     final username = _usernameController.text;
     final password = _passwordController.text;
     if (username.isEmpty || password.isEmpty) {
-      showCupertinoDialog(
+      AppDialog.info(
+        title: 'Ups! Something went wrong',
+        content: 'Please, check your credentials and try again.',
         context: context,
-        builder: (context) {
-          return CupertinoAlertDialog(
-            title: const Text('Error'),
-            content: const Text('Por favor, rellene todos los campos.'),
-            actions: [
-              CupertinoButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Aceptar'),
-              ),
-            ],
-          );
-        },
       );
-    } else {
-      await context.read<UserCubit>().signIn(username, password);
+      return;
     }
+    unawaited(context.read<UserCubit>().signIn(username, password));
   }
 
   @override
@@ -73,32 +67,22 @@ class _LoginPageState extends State<LoginPage> {
         if (state.user.isValid) {
           AppRouter.authenticatedNotifier.value = true;
         } else {
-          showCupertinoDialog(
+          AppDialog.info(
+            title: 'Ups! Something went wrong',
+            content: 'Please, check your credentials and try again.',
             context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('Error'),
-                content: const Text('Inicio de sesión incorrecto.'),
-                actions: [
-                  CupertinoButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Aceptar'),
-                  ),
-                ],
-              );
-            },
           );
         }
       },
       child: Scaffold(
         body: CupertinoAlertDialog(
-          title: const Text('Bienvenido'),
+          title: const Text('Welcome'),
           actions: [
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: CupertinoButton.filled(
                 onPressed: () => validate(),
-                child: const Text('Iniciar sesión'),
+                child: const Text('Sign In'),
               ),
             ),
           ],
@@ -109,11 +93,11 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Por favor, complete los siguientes campos para iniciar sesión.',
+                  'Complete the following fields to sign in.',
                   textAlign: TextAlign.center,
                 ),
                 const Gap(8),
-                const Text('Nombre de usuario'),
+                const Text('Username'),
                 CupertinoTextField(
                   maxLength: 50,
                   controller: _usernameController,
@@ -128,31 +112,36 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                const Text('Contraseña'),
-                CupertinoTextField(
-                  maxLength: 50,
-                  controller: _passwordController,
-                  obscureText: !_isPasswordVisible,
-                  suffix: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: GestureDetector(
-                      onTap: togglePasswordVisibility,
-                      child: Icon(
-                        _isPasswordVisible ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
+                const Text('Password'),
+                ListenableBuilder(
+                  listenable: _isPasswordVisible,
+                  builder: (context, child) {
+                    return CupertinoTextField(
+                      maxLength: 50,
+                      controller: _passwordController,
+                      obscureText: !_isPasswordVisible.value,
+                      suffix: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        child: GestureDetector(
+                          onTap: togglePasswordVisibility,
+                          child: Icon(
+                            _isPasswordVisible.value ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  prefix: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4.0),
-                    child: Icon(CupertinoIcons.lock),
-                  ),
-                  keyboardType: TextInputType.visiblePassword,
-                  placeholder: '******',
-                  style: const TextStyle(color: Colors.grey),
-                  decoration: BoxDecoration(
-                    border: Border.all(width: 1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                      prefix: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4.0),
+                        child: Icon(CupertinoIcons.lock),
+                      ),
+                      keyboardType: TextInputType.visiblePassword,
+                      placeholder: '******',
+                      style: const TextStyle(color: Colors.grey),
+                      decoration: BoxDecoration(
+                        border: Border.all(width: 1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

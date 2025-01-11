@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
 import 'package:dynamic_tabbar/dynamic_tabbar.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gap/gap.dart';
 
 import 'package:mocker/presentation/presentation.dart';
 
 /// The detail overview page.
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   /// Construct the detail overview page.
   const HomePage({super.key});
 
@@ -18,94 +16,81 @@ class HomePage extends StatefulWidget {
   static const String name = 'Home';
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  Widget build(BuildContext context) {
+    return const Scaffold(body: TabView());
+  }
 }
 
-class _HomePageState extends State<HomePage> {
-  List<TabData> tabs = [];
+class TabView extends StatefulWidget {
+  const TabView({super.key});
 
-  void removeTab(int id) {
-    setState(() {
-      tabs.removeAt(id);
-    });
-  }
+  @override
+  State<TabView> createState() => _TabViewState();
+}
 
-  void addTab() {
-    setState(() {
-      var tabNumber = tabs.length + 1;
-      tabs.add(
-        TabData(
-          index: tabNumber,
-          title: Tab(
-              child: Row(
-            children: [
-              Text('Simulation $tabNumber'),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => removeTab(tabNumber - 1),
-              ),
-            ],
-          )),
-          content: DetailPage(key: UniqueKey()),
-        ),
+class _TabViewState extends State<TabView> {
+  Map<int, TabData> tabs = {};
+
+  void removeTab(int id) => setState(() => tabs.remove(id));
+
+  void addTab() => setState(
+        () {
+          final key = tabs.length;
+          final tab = TabData(
+            index: key,
+            title: buildTabTitle(key),
+            content: MockPage(key: UniqueKey()),
+          );
+          tabs.addAll({key: tab});
+        },
       );
-    });
+
+  Tab buildTabTitle(int key) {
+    return Tab(
+      child: Row(
+        children: [
+          Text('Simulation $key'),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => removeTab(key),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 10,
-        shape: const OutlineInputBorder(
-          borderSide: BorderSide.none,
-        ),
-        actions: [
-          if (tabs.isNotEmpty)
-            OutlinedButton(
-              onPressed: addTab,
-              child: const Text("New Simulation"),
-            ),
-          BlocBuilder<ThemeCubit, bool>(
-            builder: (context, state) {
-              return IconButton(
-                icon: Icon(state ? Icons.light_mode : Icons.dark_mode),
-                onPressed: context.read<ThemeCubit>().toggle,
-              );
-            },
-          ),
-          const Gap(8),
-        ],
-      ),
-      body: Builder(builder: (context) {
+    return Builder(
+      builder: (context) {
         if (tabs.isEmpty) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Gap(8),
-                IconButton.filledTonal(
-                  onPressed: addTab,
-                  icon: const Icon(Icons.add, size: 64),
-                ),
-              ],
+            child: IconButton.filledTonal(
+              tooltip: 'New simulation',
+              onPressed: addTab,
+              icon: const Icon(Icons.add, size: 64),
             ),
           );
         }
 
         return DynamicTabBarWidget(
           isScrollable: true,
+          leading: addTabBtn(),
           indicatorSize: TabBarIndicatorSize.tab,
           tabAlignment: TabAlignment.start,
-          dynamicTabs: tabs,
-          onTabControllerUpdated: (controller) {
-            debugPrint("onTabControllerUpdated");
-          },
-          onTabChanged: (index) {
-            debugPrint("Tab changed: $index");
-          },
+          dynamicTabs: tabs.values.toList(),
+          onTabControllerUpdated: (controller) {},
+          onTabChanged: (index) {},
         );
-      }),
+      },
+    );
+  }
+
+  IconButton addTabBtn() {
+    return IconButton(
+      tooltip: 'New simulation',
+      onPressed: addTab,
+      icon: const Icon(Icons.add),
     );
   }
 }

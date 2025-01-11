@@ -15,7 +15,14 @@ class NavigationErrorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: Text('404 - Page not found'),
+        child: Column(
+          spacing: 8,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error, size: 48),
+            Text('404 - Page not found'),
+          ],
+        ),
       ),
     );
   }

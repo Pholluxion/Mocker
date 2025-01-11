@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:mocker/presentation/presentation.dart';
+
 /// The settings page.
 class SettingsPage extends StatelessWidget {
   /// Construct the settings page.
@@ -13,13 +15,8 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings Page'),
-      ),
-      body: const Center(
-        child: Text('Settings Page'),
-      ),
+    return const Scaffold(
+      body: Center(child: ThemeButton()),
     );
   }
 }

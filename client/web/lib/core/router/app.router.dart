@@ -7,7 +7,6 @@ import 'package:mocker/presentation/presentation.dart';
 
 /// The root navigator key for the main router of the app.
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
-
 final GlobalKey<NavigatorState> _homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
 final GlobalKey<NavigatorState> _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 final GlobalKey<NavigatorState> _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
@@ -52,17 +51,6 @@ class AppRouter {
       }
       return null;
     },
-    routes: <RouteBase>[
-      GoRoute(
-        name: ForgotPasswordPage.name,
-        path: ForgotPasswordPage.path,
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          return const MaterialPage<void>(
-            child: ForgotPasswordPage(),
-          );
-        },
-      ),
-    ],
   );
 
   static final StatefulShellRoute _authenticatedRoutes = StatefulShellRoute.indexedStack(
@@ -94,11 +82,11 @@ class AppRouter {
             },
             routes: <RouteBase>[
               GoRoute(
-                name: DetailPage.name,
-                path: DetailPage.path,
+                name: MockPage.name,
+                path: MockPage.path,
                 pageBuilder: (BuildContext context, GoRouterState state) {
                   return const MaterialPage<void>(
-                    child: DetailPage(),
+                    child: MockPage(),
                   );
                 },
               ),
@@ -176,9 +164,7 @@ class ScaffoldShell extends StatelessWidget {
             HomePage.name => const NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
             ProfilePage.name => const NavigationDestination(icon: Icon(Icons.account_circle), label: 'Profile'),
             SettingsPage.name => const NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
-            _ => throw UnimplementedError(
-                'The route ${e.defaultRoute?.name} is not implemented.',
-              ),
+            _ => throw UnimplementedError('The route ${e.defaultRoute?.name} is not implemented.'),
           };
         },
       ).toList(),
