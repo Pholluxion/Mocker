@@ -29,9 +29,7 @@ class MockPage extends StatelessWidget {
         create: (context) => MockCubit(
           GetIt.I.get<DocsRepository>(),
         )..getDocs(),
-        child: const Card(
-          child: MockView(),
-        ),
+        child: const MockView(),
       ),
     );
   }
@@ -44,7 +42,12 @@ class MockView extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            Visibility(
+              visible: constraints.maxWidth > 600,
+              child: const VerticalDivider(),
+            ),
             const Expanded(flex: 2, child: _ChartView()),
             Visibility(
               visible: constraints.maxWidth > 600,
@@ -303,66 +306,66 @@ class _ControlPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<MockCubit, MockState>(
       builder: (context, state) {
+        if (state.functions.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
         return Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
             IconButton.filled(
               tooltip: 'Run',
-              onPressed: state.functions.isEmpty
-                  ? null
-                  : () {
-                      if (state.parameters.any((element) => element.value.isEmpty)) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please fill all the parameters'),
-                          ),
-                        );
-                        return;
-                      }
+              onPressed: () {
+                if (state.parameters.any((element) => element.value.isEmpty)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please fill all the parameters'),
+                    ),
+                  );
+                  return;
+                }
 
-                      context.read<MockCubit>().connect();
-                    },
+                context.read<MockCubit>().connect();
+              },
               icon: const Icon(Icons.play_arrow),
             ),
             IconButton.filled(
               tooltip: 'Stop',
-              onPressed: state.functions.isEmpty ? null : () => context.read<MockCubit>().stop(),
+              onPressed: () => context.read<MockCubit>().stop(),
               icon: const Icon(Icons.stop),
             ),
             IconButton.filled(
               tooltip: 'Show Raw Data',
-              onPressed: state.functions.isEmpty
-                  ? null
-                  : () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            content: SizedBox(
-                              width: 600,
-                              child: Stack(
-                                alignment: Alignment.topRight,
-                                children: [
-                                  SourceCodeViewer<Mock>(data: state.getMock),
-                                  IconButton.outlined(
-                                    icon: const Icon(Icons.close),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ],
-                              ),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      content: SizedBox(
+                        width: 600,
+                        child: Stack(
+                          alignment: Alignment.topRight,
+                          children: [
+                            SourceCodeViewer<Mock>(data: state.getMock),
+                            IconButton.outlined(
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
                             ),
-                          );
-                        },
-                      );
-                    },
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
               icon: const Icon(Icons.share),
             ),
             IconButton.filled(
               tooltip: 'Clear',
-              onPressed: state.functions.isEmpty ? null : () => context.read<MockCubit>().clear(),
+              onPressed: () => context.read<MockCubit>().clear(),
               icon: const Icon(Icons.replay),
             ),
           ],
@@ -439,7 +442,6 @@ class _VerticalResizableWidget extends State<_ChartView> {
         final bottomHeight = totalHeight - topHeight - dividerHeight;
 
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             BlocBuilder<MockCubit, MockState>(
               builder: (context, state) {
@@ -516,30 +518,33 @@ class _VerticalResizableWidget extends State<_ChartView> {
                       );
                     },
                   ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            setState(() {
-                              buffer.clear();
-                            });
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.arrow_downward),
-                          onPressed: () {
-                            _scrollController.animateTo(
-                              _scrollController.position.maxScrollExtent,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeOut,
-                            );
-                          },
-                        ),
-                      ],
+                  Visibility(
+                    visible: buffer.isNotEmpty,
+                    child: Align(
+                      alignment: Alignment.bottomRight,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              setState(() {
+                                buffer.clear();
+                              });
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.arrow_downward),
+                            onPressed: () {
+                              _scrollController.animateTo(
+                                _scrollController.position.maxScrollExtent,
+                                duration: const Duration(milliseconds: 500),
+                                curve: Curves.easeOut,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

@@ -76,6 +76,8 @@ class _TabViewState extends State<TabView> {
         return DynamicTabBarWidget(
           isScrollable: true,
           leading: addTabBtn(),
+          nextIcon: const Icon(Icons.keyboard_double_arrow_right),
+          backIcon: const Icon(Icons.keyboard_double_arrow_left),
           indicatorSize: TabBarIndicatorSize.tab,
           tabAlignment: TabAlignment.start,
           dynamicTabs: tabs.values.toList(),
