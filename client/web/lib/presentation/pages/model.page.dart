@@ -87,9 +87,8 @@ class _ResizableWidgetState extends State<ResizableWidget> with AutomaticKeepAli
         return Row(
           children: [
             Expanded(
-              child: VerticalResizableWidget(
-                leftWidth: leftWidth,
-              ),
+              child:
+                  VerticalResizableWidget(leftWidth: leftWidth, rightWidth: rightWidth, maxWidth: constraints.maxWidth),
             ),
             Visibility(
               visible: constraints.maxWidth > 600,
@@ -139,305 +138,21 @@ class _SimulationForm extends StatefulWidget {
   State<_SimulationForm> createState() => _SimulationFormState();
 }
 
-class _SimulationFormState extends State<_SimulationForm>
-    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    _tabController = TabController(
-      length: 2,
-      vsync: this,
-      animationDuration: Duration.zero,
-    );
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
+class _SimulationFormState extends State<_SimulationForm> with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Column(
-      children: [
-        TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Properties'),
-            Tab(text: 'Raw'),
-          ],
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              SizedBox.expand(
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: 8,
-                      children: [
-                        BlocBuilder<MockCubit, MockState>(
-                          builder: (context, state) {
-                            if (state.function.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              spacing: 8,
-                              children: [
-                                IconButton.filled(
-                                  tooltip: 'Run',
-                                  onPressed: () {
-                                    ///validate the if any parameter is empty
-                                    if (state.parameters.any((element) => element.value.isEmpty)) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Please fill all the parameters'),
-                                        ),
-                                      );
-                                      return;
-                                    }
-
-                                    context.read<MockCubit>().connect();
-                                  },
-                                  icon: const Icon(Icons.play_arrow),
-                                ),
-                                IconButton.filled(
-                                  tooltip: 'Stop',
-                                  onPressed: () => context.read<MockCubit>().stop(),
-                                  icon: const Icon(Icons.stop),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        const Text('Select a device', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Row(
-                          children: [
-                            Flexible(
-                              child: BlocBuilder<UserCubit, UserState>(
-                                builder: (context, state) {
-                                  return DropdownButtonFormField<String>(
-                                    value: null,
-                                    items: state.devices.map(
-                                      (device) {
-                                        return DropdownMenuItem<String>(
-                                          value: device.deviceId.toString(),
-                                          child: Text(device.deviceName, overflow: TextOverflow.ellipsis),
-                                        );
-                                      },
-                                    ).toList(),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        final device = state.devices.firstWhere((d) => d.deviceId.toString() == value);
-
-                                        context.read<MockCubit>().setDevice(device);
-                                      });
-                                    },
-                                    decoration: const InputDecoration(
-                                      hintText: 'Select a device',
-                                      border: OutlineInputBorder(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Text('Select a method', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Row(
-                          children: [
-                            Flexible(
-                              child: BlocBuilder<MockCubit, MockState>(
-                                builder: (context, state) {
-                                  return DropdownButtonFormField<String>(
-                                    value: state.id.isEmpty ? null : state.id,
-                                    items: state.docs.map(
-                                      (doc) {
-                                        return DropdownMenuItem<String>(
-                                          value: doc.id,
-                                          child: Text("${doc.path}/${doc.name}"),
-                                        );
-                                      },
-                                    ).toList(),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        final doc = state.docs.firstWhere((doc) => doc.id == value);
-                                        final params = doc.parameters
-                                            .map(
-                                              (param) => Param(key: param, value: ''),
-                                            )
-                                            .toList();
-                                        context.read<MockCubit>()
-                                          ..setId(doc.id)
-                                          ..setPath(doc.path)
-                                          ..setFunction(doc.name)
-                                          ..setName(doc.name.toUpperCase())
-                                          ..setDescription(doc.description)
-                                          ..addParameters(params);
-                                      });
-                                    },
-                                    decoration: const InputDecoration(
-                                      hintText: 'Select a method',
-                                      border: OutlineInputBorder(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Gap(8),
-                        BlocBuilder<MockCubit, MockState>(
-                          builder: (context, state) {
-                            if (state.parameters.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-
-                            return Column(
-                              spacing: 8,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Description', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text(state.description),
-                                const Text('Parameters', style: TextStyle(fontWeight: FontWeight.bold)),
-                                const Divider(),
-                                ...state.parameters.map(
-                                  (param) {
-                                    return Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Flexible(
-                                          flex: 1,
-                                          child: Text(param.key),
-                                        ),
-                                        Flexible(
-                                          flex: 2,
-                                          child: BlocBuilder<MockCubit, MockState>(
-                                            builder: (context, state) {
-                                              return TextField(
-                                                key: ValueKey(param.key),
-                                                decoration: InputDecoration(hintText: param.value),
-                                                onChanged: (value) {
-                                                  final p = Param(key: param.key, value: value);
-                                                  context.read<MockCubit>().updateParam(p);
-                                                },
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        BlocBuilder<MockCubit, MockState>(
-                          builder: (context, state) {
-                            if (state.function.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Flexible(
-                                  flex: 1,
-                                  child: Text('Name'),
-                                ),
-                                Flexible(
-                                  flex: 2,
-                                  child: TextField(
-                                    decoration: InputDecoration(
-                                      hintText: state.name.toString(),
-                                    ),
-                                    onChanged: (value) {
-                                      context.read<MockCubit>().setName(value);
-                                    },
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        BlocBuilder<MockCubit, MockState>(
-                          builder: (context, state) {
-                            if (state.function.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Flexible(
-                                  flex: 1,
-                                  child: Text('Interval (ms)'),
-                                ),
-                                Flexible(
-                                  flex: 2,
-                                  child: TextField(
-                                    decoration: InputDecoration(
-                                      hintText: state.intervalMs.toString(),
-                                    ),
-                                    onChanged: (value) {
-                                      context.read<MockCubit>().setIntervalMs(int.parse(value));
-                                    },
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        BlocBuilder<MockCubit, MockState>(
-                          builder: (context, state) {
-                            if (state.function.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Flexible(
-                                  flex: 2,
-                                  child: Text('Enable MQTT'),
-                                ),
-                                Flexible(
-                                  flex: 1,
-                                  child: Switch(
-                                    value: state.mqtt,
-                                    onChanged: (value) {
-                                      context.read<MockCubit>().setMqtt(value);
-                                    },
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        const Gap(16),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              BlocBuilder<MockCubit, MockState>(
-                builder: (context, state) {
-                  return SourceCodeViewer<Mock>(data: state.getMock);
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
+    return const Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Column(
+        spacing: 8,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ControlPanel(),
+          Gap(8),
+          Expanded(child: MockForm()),
+        ],
+      ),
     );
   }
 
@@ -445,13 +160,297 @@ class _SimulationFormState extends State<_SimulationForm>
   bool get wantKeepAlive => true;
 }
 
+class DeviceTile extends StatelessWidget {
+  const DeviceTile({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Builder(
+      builder: (context) {
+        final user = context.watch<UserCubit>().state;
+        final mock = context.watch<MockCubit>().state;
+        return ExpansionTile(
+          maintainState: true,
+          title: const Text('Select a device'),
+          subtitle: Text(
+            mock.device?.deviceName ?? 'No device selected',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          leading: const Icon(Icons.devices),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          collapsedBackgroundColor: mock.device != null ? Colors.black12 : Colors.transparent,
+          children: <Widget>[
+            ...user.devices.map(
+              (device) {
+                return Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: ListTile(
+                    tileColor: Colors.black12,
+                    title: Text(device.deviceName),
+                    shape: device.deviceId == mock.device?.deviceId
+                        ? RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: const BorderSide(width: 2),
+                          )
+                        : RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    onTap: () => context.read<MockCubit>().setDevice(device),
+                  ),
+                );
+              },
+            )
+          ],
+        );
+      },
+    );
+  }
+}
+
+class MockForm extends StatelessWidget {
+  const MockForm({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 8,
+          children: [
+            const Text('Select a device', style: TextStyle(fontWeight: FontWeight.bold)),
+            const DeviceTile(),
+            BlocBuilder<MockCubit, MockState>(
+              builder: (context, state) {
+                if (state.device == null) {
+                  return const SizedBox.shrink();
+                }
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(flex: 1, child: Text('Name')),
+                    Flexible(
+                      flex: 2,
+                      child: TextField(
+                        decoration: InputDecoration(hintText: state.name.toString()),
+                        onChanged: (value) => context.read<MockCubit>().setName(value),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            BlocBuilder<MockCubit, MockState>(
+              builder: (context, state) {
+                if (state.device == null) {
+                  return const SizedBox.shrink();
+                }
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(flex: 1, child: Text('Interval (ms)')),
+                    Flexible(
+                      flex: 2,
+                      child: TextField(
+                        decoration: InputDecoration(hintText: state.intervalMs.toString()),
+                        onChanged: (value) => context.read<MockCubit>().setIntervalMs(int.parse(value)),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            BlocBuilder<MockCubit, MockState>(
+              builder: (context, state) {
+                if (state.device == null) {
+                  return const SizedBox.shrink();
+                }
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(flex: 2, child: Text('Enable MQTT')),
+                    Flexible(
+                      flex: 1,
+                      child: Switch(
+                        value: state.mqtt,
+                        onChanged: (value) => context.read<MockCubit>().setMqtt(value),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const Text('Select a method', style: TextStyle(fontWeight: FontWeight.bold)),
+            BlocBuilder<MockCubit, MockState>(
+              builder: (context, state) {
+                return Column(
+                  spacing: 8,
+                  children: [
+                    ...state.docs.map(
+                      (doc) {
+                        final fn = state.getFunction(doc.path);
+
+                        return ExpansionTile(
+                          enabled: fn.$1,
+                          title: Text(doc.path),
+                          subtitle: Text(doc.description),
+                          collapsedBackgroundColor: fn.$1 ? Colors.black12 : Colors.transparent,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          leading: Checkbox(
+                            value: state.getFunction(doc.path).$1,
+                            onChanged: state.device != null
+                                ? (value) {
+                                    debugPrint(value.toString());
+
+                                    if (value == null) return;
+
+                                    if (value) {
+                                      context.read<MockCubit>().addFunction(doc);
+                                    } else {
+                                      context.read<MockCubit>().removeFunction(doc.path);
+                                    }
+                                  }
+                                : null,
+                          ),
+                          children: <Widget>[
+                            if (fn.$2 != null)
+                              ...fn.$2!.parameters.map(
+                                (param) {
+                                  return Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Flexible(flex: 1, child: Text(param.key)),
+                                        Flexible(
+                                          flex: 2,
+                                          child: TextField(
+                                            enabled: fn.$1,
+                                            key: ValueKey(key),
+                                            decoration: InputDecoration(hintText: param.value),
+                                            onChanged: (value) => context.read<MockCubit>().updateFunctionParam(
+                                                  fn.$2!.handler,
+                                                  Param(
+                                                    key: param.key,
+                                                    value: value,
+                                                  ),
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                          ],
+                        );
+                      },
+                    )
+                  ],
+                );
+              },
+            ),
+            const Gap(16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ControlPanel extends StatelessWidget {
+  const _ControlPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<MockCubit, MockState>(
+      builder: (context, state) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          spacing: 8,
+          children: [
+            IconButton.filled(
+              tooltip: 'Run',
+              onPressed: state.functions.isEmpty
+                  ? null
+                  : () {
+                      if (state.parameters.any((element) => element.value.isEmpty)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill all the parameters'),
+                          ),
+                        );
+                        return;
+                      }
+
+                      context.read<MockCubit>().connect();
+                    },
+              icon: const Icon(Icons.play_arrow),
+            ),
+            IconButton.filled(
+              tooltip: 'Stop',
+              onPressed: state.functions.isEmpty ? null : () => context.read<MockCubit>().stop(),
+              icon: const Icon(Icons.stop),
+            ),
+            IconButton.filled(
+              tooltip: 'Show Raw Data',
+              onPressed: state.functions.isEmpty
+                  ? null
+                  : () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            content: SizedBox(
+                              width: 600,
+                              child: Stack(
+                                alignment: Alignment.topRight,
+                                children: [
+                                  SourceCodeViewer<Mock>(data: state.getMock),
+                                  IconButton.outlined(
+                                    icon: const Icon(Icons.close),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+              icon: const Icon(Icons.share),
+            ),
+            IconButton.filled(
+              tooltip: 'Clear',
+              onPressed: state.functions.isEmpty ? null : () => context.read<MockCubit>().clear(),
+              icon: const Icon(Icons.replay),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class VerticalResizableWidget extends StatefulWidget {
   const VerticalResizableWidget({
     super.key,
     required this.leftWidth,
+    required this.rightWidth,
+    required this.maxWidth,
   });
 
   final double leftWidth;
+  final double rightWidth;
+  final double maxWidth;
 
   @override
   State<VerticalResizableWidget> createState() => _VerticalResizableWidget();
@@ -461,8 +460,8 @@ class _VerticalResizableWidget extends State<VerticalResizableWidget> {
   double _dividerPosition = 0.7;
   late ScrollController _scrollController;
   late StreamSubscription _subscription;
-  List<Data> buffer = [];
-  int bufferLength = 1000;
+  List<Map<String, dynamic>> buffer = [];
+  int bufferLength = 10000;
 
   @override
   void initState() {
@@ -471,7 +470,7 @@ class _VerticalResizableWidget extends State<VerticalResizableWidget> {
     _onData();
   }
 
-  void addData(Data data) {
+  void addData(Map<String, dynamic> data) {
     buffer.add(data);
     if (buffer.length > bufferLength) {
       buffer.removeAt(0);
@@ -488,11 +487,20 @@ class _VerticalResizableWidget extends State<VerticalResizableWidget> {
   void _onData() {
     _subscription = context.read<MockCubit>().channel.stream.listen(
       (event) {
-        setState(() {
-          final json = jsonDecode(event);
-          final data = Data.fromJson(json);
-          addData(data);
-        });
+        setState(
+          () {
+            final data = json.decode(event);
+            if (data is Map<String, dynamic> && data['values'] is List<dynamic>) {
+              final list = data['values'] as List<dynamic>;
+
+              for (final d in list) {
+                addData(d);
+              }
+            } else {
+              debugPrint('Invalid data format: $data');
+            }
+          },
+        );
       },
     );
   }
@@ -510,23 +518,48 @@ class _VerticalResizableWidget extends State<VerticalResizableWidget> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Builder(
-              builder: (context) {
-                if (buffer.isEmpty) {
-                  return const Expanded(child: Center(child: Icon(Icons.stacked_bar_chart_outlined, size: 64)));
+            BlocBuilder<MockCubit, MockState>(
+              builder: (context, state) {
+                if (state.functions.isEmpty || buffer.isEmpty) {
+                  return const Expanded(
+                    child: Center(
+                      child: Icon(
+                        Icons.stacked_bar_chart_outlined,
+                        size: 64,
+                      ),
+                    ),
+                  );
                 }
 
-                return Expanded(child: DataDistributionChart(data: buffer));
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      ...state.functions.map(
+                        (function) {
+                          final name = function.getParam('name');
+                          final bff = buffer.where((element) => element['name'] == name.value).toList();
+
+                          final width = widget.maxWidth > 600 ? widget.leftWidth : widget.maxWidth;
+
+                          return SizedBox(
+                            width: width,
+                            height: topHeight,
+                            child: DataDistributionChart(buffer: bff),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
               },
             ),
-
-            // Divisor redimensionable
             GestureDetector(
               behavior: HitTestBehavior.translucent,
               onVerticalDragUpdate: (details) {
                 setState(() {
                   _dividerPosition += details.delta.dy / totalHeight;
-                  _dividerPosition = _dividerPosition.clamp(0.3, 0.7); // Limitar rango
+                  _dividerPosition = _dividerPosition.clamp(0.3, 0.7);
                 });
               },
               child: Container(
@@ -539,7 +572,6 @@ class _VerticalResizableWidget extends State<VerticalResizableWidget> {
                 ),
               ),
             ),
-            // Sección inferior
             SizedBox(
               height: bottomHeight,
               child: Stack(
@@ -548,7 +580,19 @@ class _VerticalResizableWidget extends State<VerticalResizableWidget> {
                     controller: _scrollController,
                     itemCount: buffer.length,
                     itemBuilder: (context, index) {
-                      return Text("-> ${buffer[index].name} : ${buffer[index].value}");
+                      final mock = context.read<MockCubit>().state;
+                      return Text.rich(
+                        TextSpan(
+                          text: "${mock.name}: ",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          children: [
+                            TextSpan(
+                              text: buffer[index].toString(),
+                              style: const TextStyle(fontWeight: FontWeight.normal),
+                            )
+                          ],
+                        ),
+                      );
                     },
                   ),
                   Align(
@@ -587,27 +631,20 @@ class _VerticalResizableWidget extends State<VerticalResizableWidget> {
   }
 }
 
-class Data {
-  final String name;
-  final dynamic value;
-
-  Data({required this.name, required this.value});
-
-  factory Data.fromJson(Map<String, dynamic> json) {
-    return Data(name: json['name'], value: json['value']);
-  }
-}
-
 class DataDistributionChart extends StatelessWidget {
-  final List<Data> data;
+  final List<Map<String, dynamic>> buffer;
 
-  const DataDistributionChart({super.key, required this.data});
+  const DataDistributionChart({super.key, required this.buffer});
 
   @override
   Widget build(BuildContext context) {
     try {
-      // Extraer los valores numéricos de la lista de datos
-      final List<double> values = data.map((d) => d.value as double).toList();
+      List<double> values = [];
+      for (var map in buffer) {
+        if (map['value'] is num) {
+          values.add(map['value'].toDouble());
+        }
+      }
 
       // Crear bins para el histograma
       const int binCount = 10;
@@ -619,7 +656,7 @@ class DataDistributionChart extends StatelessWidget {
 
       for (var value in values) {
         int binIndex = ((value - minValue) / binSize).floor();
-        if (binIndex == binCount) binIndex -= 1; // Manejar caso borde
+        if (binIndex == binCount) binIndex -= 1;
         frequencies[binIndex]++;
       }
       return Padding(
@@ -671,7 +708,7 @@ class DataDistributionChart extends StatelessWidget {
         ),
       );
     } catch (e) {
-      return const SizedBox.shrink();
+      return const Center(child: CircularProgressIndicator.adaptive());
     }
   }
 }

@@ -1,6 +1,6 @@
 import 'package:server/src/pipe/pipe.dart';
 
-class StepState extends Message<int> {
+class StepState extends MockMessage<int> {
   StepState({
     super.name = 'step',
     super.value = 0,

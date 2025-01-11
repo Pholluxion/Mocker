@@ -1,7 +1,7 @@
 import 'package:data/data.dart';
 import 'package:server/src/pipe/pipe.dart';
 
-class DiscreteDistributionValue extends Message<int> {
+class DiscreteDistributionValue extends MockMessage<int> {
   DiscreteDistributionValue({
     super.name = 'value',
     super.value = 0,

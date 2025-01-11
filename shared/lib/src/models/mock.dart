@@ -2,8 +2,11 @@ import 'models.dart';
 
 /// An mock that can be emitted.
 class Mock {
-  /// The name of the function that will be called.
-  final String function;
+  /// The handler of the mock.
+  final String handler;
+
+  /// The list of functions that should be called.
+  final List<FunctionModel> functions;
 
   /// The name of the mock.
   final String name;
@@ -18,8 +21,9 @@ class Mock {
   final List<Param> parameters;
 
   Mock({
+    required this.handler,
     required this.name,
-    required this.function,
+    required this.functions,
     required this.intervalMs,
     required this.parameters,
     required this.mqtt,
@@ -28,42 +32,47 @@ class Mock {
   Duration get duration => Duration(milliseconds: intervalMs);
 
   factory Mock.empty() => Mock(
+        handler: '',
         name: '',
-        function: '',
+        functions: [],
         intervalMs: 0,
         mqtt: false,
         parameters: [],
       );
 
   factory Mock.fromJson(Map<String, dynamic> json) => Mock(
+        handler: json['handler'] as String,
         name: json['name'] as String,
-        function: json['function'] as String,
+        functions: (json['functions'] as List<dynamic>?)?.map((e) => FunctionModel.fromJson(e)).toList() ?? [],
         intervalMs: json['intervalMs'] as int,
         mqtt: json['mqtt'] as bool,
         parameters: (json['parameters'] as List<dynamic>?)?.map((e) => Param.fromJson(e)).toList() ?? [],
       );
 
   Map<String, dynamic> toJson() => {
+        'handler': handler,
         'name': name,
         'intervalMs': intervalMs,
-        'function': function,
+        'functions': functions,
         'mqtt': mqtt,
         'parameters': parameters,
       };
 
   Mock copyWith({
-    String? name,
-    String? function,
     int? intervalMs,
-    List<Param>? parameters,
     bool? mqtt,
+    String? name,
+    String? handler,
+    List<Param>? parameters,
+    List<FunctionModel>? functions,
   }) {
     return Mock(
       name: name ?? this.name,
-      function: function ?? this.function,
+      mqtt: mqtt ?? this.mqtt,
+      handler: handler ?? this.handler,
+      functions: functions ?? this.functions,
       intervalMs: intervalMs ?? this.intervalMs,
       parameters: parameters ?? this.parameters,
-      mqtt: mqtt ?? this.mqtt,
     );
   }
 

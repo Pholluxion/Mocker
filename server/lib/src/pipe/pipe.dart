@@ -9,19 +9,28 @@ import 'package:server/src/pipe/mqtt.dart';
 
 export 'package:shared/shared.dart';
 
+abstract class Message extends Object {
+  Map<String, dynamic> toJson();
+
+  Map<String, dynamic> format();
+}
+
 /// Contract for a message.
-abstract class Message<T> extends Object {
+abstract class MockMessage<T> extends Message {
   final String name;
   final T value;
 
-  Message({
+  MockMessage({
     required this.name,
     required this.value,
   });
 
-  Map<String, dynamic> toJson();
-
+  @override
   Map<String, dynamic> format() => {name: value};
+}
+
+abstract class MultiMessage extends Message {
+  void add(MockMessage message);
 }
 
 /// A callback that handles an mock.
@@ -196,7 +205,7 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
     }
 
     /// Get the handler for the mock.
-    final handler = _handlers[newEvent.function];
+    final handler = _handlers[newEvent.handler];
 
     if (handler != null) {
       /// Set the new mock.
@@ -209,12 +218,12 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
         _stopMQTTService(newEvent);
       }
 
-      stdout.writeln('Handling mock ${newEvent.function}...');
+      stdout.writeln('Handling mock ${newEvent.handler}...');
 
       /// Call the handler for the mock.
       handler(newEvent);
     } else {
-      throw StateError('Event ${newEvent.function} is not handled.');
+      throw StateError('Event ${newEvent.handler} is not handled.');
     }
   }
 
@@ -240,6 +249,7 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
   /// method that sends the state to the socket channel.
   void _sendState(State state) {
     try {
+      // stdout.writeln('Sending state to the socket channel...${state.toJson()}');
       /// Send the state to the socket channel.
       _webSocketChannel.sink.add(json.encode(state.toJson()));
 

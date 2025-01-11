@@ -3,7 +3,7 @@ import 'package:data/data.dart';
 import 'package:server/src/pipe/pipe.dart';
 import 'package:server/src/utils/extensions.dart';
 
-class ContinuousDistributionValue extends Message<double> {
+class ContinuousDistributionValue extends MockMessage<double> {
   ContinuousDistributionValue({
     super.name = 'value',
     super.value = 0.0,
