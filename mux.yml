@@ -1,0 +1,36 @@
+handler: mux
+name: Device 6
+intervalMs: 1000
+functions:
+  - handler: /continuous/normal
+    parameters:
+      - key: mu
+        value: "30"
+      - key: sigma
+        value: "3"
+      - key: name
+        value: Temperature
+  - handler: /continuous/uniform
+    parameters:
+      - key: a
+        value: "1"
+      - key: b
+        value: "10"
+      - key: name
+        value: Uniforme
+  - handler: /continuous/exponential
+    parameters:
+      - key: lambda
+        value: "3"
+      - key: name
+        value: Expo
+mqtt: true
+parameters:
+  - key: deviceUUID
+    value: "8"
+  - key: topic
+    value: Device 6
+  - key: status
+    value: OK
+  - key: alert
+    value: "false"

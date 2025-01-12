@@ -1,7 +1,6 @@
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import 'package:flex_color_scheme/flex_color_scheme.dart';
 
 /// The [AppTheme] defines light and dark themes for the app.
 ///
@@ -29,8 +28,6 @@ abstract final class AppTheme {
       tintedDisabledControls: true,
       blendOnLevel: 8,
       useM2StyleDividerInM3: true,
-      adaptiveSplash: FlexAdaptive.desktop(),
-      splashType: FlexSplashType.instantSplash,
       defaultRadius: 12.0,
       elevatedButtonSchemeColor: SchemeColor.onPrimaryContainer,
       elevatedButtonSecondarySchemeColor: SchemeColor.primaryContainer,
@@ -76,6 +73,7 @@ abstract final class AppTheme {
       navigationRailIndicatorOpacity: 1.00,
       navigationRailIndicatorRadius: 12.0,
       navigationRailBackgroundSchemeColor: SchemeColor.surface,
+      navigationRailLabelType: NavigationRailLabelType.none,
     ),
     keyColors: const FlexKeyColors(
       useSecondary: true,
@@ -83,8 +81,7 @@ abstract final class AppTheme {
       keepPrimary: true,
     ),
     tones: FlexSchemeVariant.jolly.tones(Brightness.light),
-    visualDensity: VisualDensity.adaptivePlatformDensity,
-    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    visualDensity: FlexColorScheme.comfortablePlatformDensity,
     cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
   );
   // The defined dark theme.
@@ -98,10 +95,6 @@ abstract final class AppTheme {
       blendOnLevel: 10,
       blendOnColors: true,
       useM2StyleDividerInM3: true,
-      adaptiveSplash: FlexAdaptive.desktop(),
-      splashType: FlexSplashType.instantSplash,
-      adaptiveRemoveElevationTint: FlexAdaptive.desktop(),
-      adaptiveElevationShadowsBack: FlexAdaptive.desktop(),
       defaultRadius: 12.0,
       elevatedButtonSchemeColor: SchemeColor.onPrimaryContainer,
       elevatedButtonSecondarySchemeColor: SchemeColor.primaryContainer,
@@ -147,14 +140,14 @@ abstract final class AppTheme {
       navigationRailIndicatorOpacity: 1.00,
       navigationRailIndicatorRadius: 12.0,
       navigationRailBackgroundSchemeColor: SchemeColor.surface,
+      navigationRailLabelType: NavigationRailLabelType.none,
     ),
     keyColors: const FlexKeyColors(
       useSecondary: true,
       useTertiary: true,
     ),
     tones: FlexSchemeVariant.jolly.tones(Brightness.dark),
-    visualDensity: VisualDensity.adaptivePlatformDensity,
-    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    visualDensity: FlexColorScheme.comfortablePlatformDensity,
     cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
   );
 }

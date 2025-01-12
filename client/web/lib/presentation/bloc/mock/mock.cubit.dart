@@ -1,37 +1,61 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:mocker/data/repository/mock.repository.dart';
 import 'package:shared/shared.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'package:mocker/domain/domain.dart';
 
 class MockCubit extends Cubit<MockState> {
-  MockCubit(this._docsRepository) : super(const MockState());
+  MockCubit(
+    this.endpoint,
+    this._docsRepository,
+  )   : _mockRepository = MockRepositoryImpl(uri: Uri.parse(endpoint)),
+        super(const MockState()) {
+    _subscription = _mockRepository.getData().listen(
+      (event) {
+        _buffer.addAll(event);
+      },
+    );
+  }
 
   final DocsRepository _docsRepository;
+  final MockRepository _mockRepository;
+  final String endpoint;
 
-  static const serverPort = int.fromEnvironment('SERVER_PORT', defaultValue: 8090);
-  static const serverHost = String.fromEnvironment('SERVER_HOST', defaultValue: 'localhost');
+  late StreamSubscription _subscription;
+  final List<Data> _buffer = [];
 
-  final uri = Uri.parse('ws://$serverHost:$serverPort/distribution');
-  late WebSocketChannel channel = WebSocketChannel.connect(uri);
+  bool get isBufferEmpty => _buffer.isEmpty;
+
+  List<Data> getDataByName(String name) => _buffer.where((e) => e.name == name).toList();
+
+  List<Data> get buffer => _buffer;
+
+  Stream<List<Data>> getData() => _mockRepository.getData();
 
   @override
   Future<void> close() {
-    channel.sink.close();
+    _mockRepository.close();
+    _subscription.cancel();
     return super.close();
   }
 
-  void connect() async {
-    await channel.ready;
+  void add() {
     final raw = json.encode(state.getMock);
-    channel.sink.add(raw);
+    _mockRepository.sendData(raw);
   }
 
   void clear() {
+    stop();
+    clearBuffer();
     emit(MockState(docs: state.docs));
+  }
+
+  void clearBuffer() {
+    _buffer.clear();
   }
 
   Future<void> getDocs() async {
@@ -120,8 +144,7 @@ class MockCubit extends Cubit<MockState> {
 
   void stop() {
     final raw = json.encode(state.getStopMock);
-
-    channel.sink.add(raw);
+    _mockRepository.sendData(raw);
   }
 }
 
@@ -214,6 +237,10 @@ class MockState extends Equatable {
     }
     final fn = functions.firstWhere((fn) => fn.handler == hdlr);
     return (true, fn);
+  }
+
+  bool validateFunctionParams(String hdlr) {
+    return functions.any((fn) => fn.handler == hdlr && fn.parameters.every((p) => p.value.isNotEmpty));
   }
 
   List<Param> get getDeviceParams {

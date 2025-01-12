@@ -35,7 +35,7 @@ class _TabViewState extends State<TabView> {
 
   void addTab() => setState(
         () {
-          final key = tabs.length;
+          final key = tabs.length + 1;
           final tab = TabData(
             index: key,
             title: buildTabTitle(key),

@@ -1,22 +1,27 @@
-import 'dart:math';
+import 'dart:math' show max, min;
 
 import 'package:flutter/material.dart';
 
 import 'package:fl_chart/fl_chart.dart';
+import 'package:mocker/domain/domain.dart';
 
 class DataDistributionChart extends StatelessWidget {
-  final List<Map<String, dynamic>> buffer;
+  const DataDistributionChart({
+    super.key,
+    required this.data,
+    required this.color,
+  });
 
-  const DataDistributionChart({super.key, required this.buffer});
+  final List<Data> data;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     try {
       List<double> values = [];
-      for (var map in buffer) {
-        if (map['value'] is num) {
-          values.add(map['value'].toDouble());
-        }
+
+      for (var d in data) {
+        values.add(d.value.toDouble());
       }
 
       const int binCount = 10;
@@ -34,20 +39,24 @@ class DataDistributionChart extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.all(16.0),
         child: BarChart(
+          curve: Curves.easeInOut,
           BarChartData(
             alignment: BarChartAlignment.spaceAround,
-            barGroups: List.generate(binCount, (index) {
-              return BarChartGroupData(
-                x: index,
-                barRods: [
-                  BarChartRodData(
-                    toY: frequencies[index].toDouble(),
-                    color: Colors.blue,
-                    width: 20,
-                  )
-                ],
-              );
-            }),
+            barGroups: List.generate(
+              binCount,
+              (index) {
+                return BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(
+                      toY: frequencies[index].toDouble(),
+                      color: color,
+                      width: 20,
+                    )
+                  ],
+                );
+              },
+            ),
             titlesData: FlTitlesData(
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(

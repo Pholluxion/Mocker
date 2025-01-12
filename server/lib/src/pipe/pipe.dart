@@ -10,7 +10,7 @@ import 'package:server/src/pipe/mqtt.dart';
 export 'package:shared/shared.dart';
 
 abstract class Message extends Object {
-  Map<String, dynamic> toJson();
+  Object? toJson();
 
   Map<String, dynamic> format();
 }
@@ -27,6 +27,9 @@ abstract class MockMessage<T> extends Message {
 
   @override
   Map<String, dynamic> format() => {name: value};
+
+  @override
+  Object? toJson() => {'name': name, 'value': value};
 }
 
 abstract class MultiMessage extends Message {

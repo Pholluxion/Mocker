@@ -7,9 +7,6 @@ class DiscreteDistributionValue extends MockMessage<int> {
     required super.name,
     required super.value,
   });
-
-  @override
-  Map<String, dynamic> toJson() => {'name': name, 'value': value};
 }
 
 class ContinuousDistributionValue extends MockMessage<double> {
@@ -17,9 +14,6 @@ class ContinuousDistributionValue extends MockMessage<double> {
     required super.name,
     required super.value,
   });
-
-  @override
-  Map<String, dynamic> toJson() => {'name': name, 'value': value};
 }
 
 class DistributionMock extends MultiMessage {
@@ -33,11 +27,7 @@ class DistributionMock extends MultiMessage {
       );
 
   @override
-  Map<String, dynamic> toJson() {
-    return {
-      'values': messages.map((e) => e.toJson()).toList(),
-    };
-  }
+  Object? toJson() => messages.map((message) => message.toJson()).toList();
 
   DistributionMock copyWith({
     List<MockMessage>? messages,

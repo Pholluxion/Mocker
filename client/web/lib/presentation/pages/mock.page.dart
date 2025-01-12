@@ -1,6 +1,4 @@
-import 'dart:async';
-import 'dart:convert';
-
+import 'package:dynamic_tabbar/dynamic_tabbar.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,11 +20,19 @@ class MockPage extends StatelessWidget {
   /// The name for the detail page.
   static const String name = 'Mock';
 
+  /// The server port.
+  static const serverPort = int.fromEnvironment('SERVER_PORT', defaultValue: 8090);
+
+  /// The server host.
+  static const serverHost = String.fromEnvironment('SERVER_HOST', defaultValue: 'localhost');
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocProvider(
+        lazy: false,
         create: (context) => MockCubit(
+          'ws://$serverHost:$serverPort/distribution',
           GetIt.I.get<DocsRepository>(),
         )..getDocs(),
         child: const MockView(),
@@ -44,18 +50,28 @@ class MockView extends StatelessWidget {
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            Expanded(
+              flex: 2,
+              child: BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return const AdaptiveWidget(
+                    dividerPosition: 0.7,
+                    topChild: _ChartView(),
+                    bottomChild: _ConsoleView(),
+                  );
+                },
+              ),
+            ),
             Visibility(
               visible: constraints.maxWidth > 600,
               child: const VerticalDivider(),
             ),
-            const Expanded(flex: 2, child: _ChartView()),
             Visibility(
               visible: constraints.maxWidth > 600,
-              child: const VerticalDivider(),
-            ),
-            Visibility(
-              visible: constraints.maxWidth > 600,
-              child: const Expanded(flex: 1, child: _SimulationForm()),
+              child: const Expanded(
+                flex: 1,
+                child: _SimulationForm(),
+              ),
             ),
           ],
         );
@@ -240,8 +256,6 @@ class _MockForm extends StatelessWidget {
                               value: state.getFunction(doc.path).$1,
                               onChanged: state.device != null
                                   ? (value) {
-                                      debugPrint(value.toString());
-
                                       if (value == null) return;
 
                                       if (value) {
@@ -265,6 +279,7 @@ class _MockForm extends StatelessWidget {
                                           Flexible(
                                             flex: 2,
                                             child: TextField(
+                                              maxLength: 50,
                                               enabled: fn.$1,
                                               key: ValueKey(key),
                                               decoration: InputDecoration(hintText: param.value),
@@ -326,7 +341,7 @@ class _ControlPanel extends StatelessWidget {
                   return;
                 }
 
-                context.read<MockCubit>().connect();
+                context.read<MockCubit>().add();
               },
               icon: const Icon(Icons.play_arrow),
             ),
@@ -375,182 +390,126 @@ class _ControlPanel extends StatelessWidget {
   }
 }
 
-class _ChartView extends StatefulWidget {
-  const _ChartView();
+class _ConsoleView extends StatefulWidget {
+  const _ConsoleView();
 
   @override
-  State<_ChartView> createState() => _VerticalResizableWidget();
+  State<_ConsoleView> createState() => _ConsoleViewState();
 }
 
-class _VerticalResizableWidget extends State<_ChartView> {
-  double _dividerPosition = 0.7;
-  late ScrollController _scrollController;
-  late StreamSubscription _subscription;
-  List<Map<String, dynamic>> buffer = [];
-  int bufferLength = 10000;
+class _ConsoleViewState extends State<_ConsoleView> {
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
-    super.initState();
     _scrollController = ScrollController();
-    _onData();
-  }
-
-  void addData(Map<String, dynamic> data) {
-    buffer.add(data);
-    if (buffer.length > bufferLength) {
-      buffer.removeAt(0);
-    }
+    super.initState();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _subscription.cancel();
     super.dispose();
   }
 
-  void _onData() {
-    _subscription = context.read<MockCubit>().channel.stream.listen(
-      (event) {
-        setState(
-          () {
-            final data = json.decode(event);
-            if (data is Map<String, dynamic> && data['values'] is List<dynamic>) {
-              final list = data['values'] as List<dynamic>;
+  @override
+  Widget build(BuildContext context) {
+    final mockCubit = context.watch<MockCubit>();
+    return StreamBuilder<List<Data>>(
+      stream: mockCubit.getData(),
+      builder: (context, snapshot) {
+        if (mockCubit.isBufferEmpty) {
+          return const Center(
+            child: Text('No data available'),
+          );
+        }
 
-              for (final d in list) {
-                addData(d);
-              }
-            } else {
-              debugPrint('Invalid data format: $data');
-            }
+        const colors = Colors.primaries;
+
+        final names = mockCubit.buffer.map((e) => e.name).toSet();
+
+        final mapNameColor = names.fold<Map<String, Color>>(
+          {},
+          (previousValue, element) {
+            final index = names.toList().indexOf(element);
+            return previousValue..addAll({element: colors[index % colors.length]});
+          },
+        );
+
+        return ListView.builder(
+          controller: _scrollController,
+          itemCount: mockCubit.buffer.length,
+          itemBuilder: (context, index) {
+            return Text(
+              mockCubit.buffer[index].toString(),
+              style: TextStyle(color: mapNameColor[mockCubit.buffer[index].name]),
+            );
           },
         );
       },
     );
   }
+}
+
+class _ChartView extends StatelessWidget {
+  const _ChartView();
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final totalHeight = constraints.maxHeight;
-        const dividerHeight = 16.0;
+    final mockCubit = context.watch<MockCubit>();
 
-        final topHeight = _dividerPosition * totalHeight - dividerHeight / 2;
-        final bottomHeight = totalHeight - topHeight - dividerHeight;
+    return StreamBuilder<List<Data>>(
+      stream: mockCubit.getData(),
+      builder: (context, snapshot) {
+        if (mockCubit.state.functions.isEmpty || mockCubit.isBufferEmpty) {
+          return const Center(child: Icon(Icons.bar_chart, size: 48));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: CircularProgressIndicator.adaptive());
+        }
 
-        return Column(
-          children: [
-            BlocBuilder<MockCubit, MockState>(
-              builder: (context, state) {
-                if (state.functions.isEmpty || buffer.isEmpty) {
-                  return const Expanded(
-                    child: Center(
-                      child: Icon(
-                        Icons.stacked_bar_chart_outlined,
-                        size: 64,
-                      ),
-                    ),
-                  );
-                }
+        final tabs = mockCubit.state.functions.fold<Map<int, TabData>>(
+          {},
+          (previousValue, element) {
+            final name = element.getStringParam('name');
 
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      ...state.functions.map(
-                        (function) {
-                          final name = function.getParam('name');
-                          final bff = buffer.where((element) => element['name'] == name.value).toList();
+            if (!mockCubit.state.validateFunctionParams(element.handler)) {
+              return previousValue;
+            }
+            final data = mockCubit.getDataByName(name);
 
-                          return SizedBox(
-                            width: constraints.maxWidth * 0.95,
-                            height: topHeight,
-                            child: DataDistributionChart(buffer: bff),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                );
+            const colors = Colors.primaries;
+
+            final names = mockCubit.buffer.map((e) => e.name).toSet();
+
+            final mapNameColor = names.fold<Map<String, Color>>(
+              {},
+              (previousValue, element) {
+                final index = names.toList().indexOf(element);
+                return previousValue..addAll({element: colors[index % colors.length]});
               },
-            ),
-            GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onVerticalDragUpdate: (details) {
-                setState(() {
-                  _dividerPosition += details.delta.dy / totalHeight;
-                  _dividerPosition = _dividerPosition.clamp(0.3, 0.7);
-                });
-              },
-              child: Container(
-                color: Colors.black12,
-                child: const Center(
-                  child: Icon(
-                    Icons.drag_handle,
-                    size: dividerHeight,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              height: bottomHeight,
-              child: Stack(
-                children: [
-                  ListView.builder(
-                    controller: _scrollController,
-                    itemCount: buffer.length,
-                    itemBuilder: (context, index) {
-                      final mock = context.read<MockCubit>().state;
-                      return Text.rich(
-                        TextSpan(
-                          text: "${mock.name}: ",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          children: [
-                            TextSpan(
-                              text: buffer[index].toString(),
-                              style: const TextStyle(fontWeight: FontWeight.normal),
-                            )
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  Visibility(
-                    visible: buffer.isNotEmpty,
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              setState(() {
-                                buffer.clear();
-                              });
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.arrow_downward),
-                            onPressed: () {
-                              _scrollController.animateTo(
-                                _scrollController.position.maxScrollExtent,
-                                duration: const Duration(milliseconds: 500),
-                                curve: Curves.easeOut,
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            );
+
+            final tab = TabData(
+              index: previousValue.length,
+              title: Tab(text: name),
+              content: DataDistributionChart(data: data, color: mapNameColor[name] ?? Colors.blue),
+            );
+            return previousValue..addAll({previousValue.length: tab});
+          },
+        );
+
+        if (tabs.isEmpty) {
+          return const Center(child: Icon(Icons.bar_chart, size: 48));
+        }
+
+        return DynamicTabBarWidget(
+          isScrollable: true,
+          nextIcon: const Icon(Icons.keyboard_double_arrow_right),
+          backIcon: const Icon(Icons.keyboard_double_arrow_left),
+          dynamicTabs: tabs.values.toList(),
+          onTabControllerUpdated: (controller) {},
+          onAddTabMoveTo: MoveToTab.first,
         );
       },
     );

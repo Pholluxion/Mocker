@@ -10,7 +10,7 @@ SERVER_DIR = server
 DART_RUN_CMD = dart run bin/server.dart
 
 # Comando para compilar Flutter para web
-FLUTTER_BUILD_CMD = flutter clean;flutter pub get; flutter build web --release --dart-define-from-file=../../.env
+FLUTTER_BUILD_CMD = flutter clean;flutter pub get; flutter build web --release --dart-define-from-file=../../.env --wasm
 
 # Comando para ejecutar Flutter en modo web
 FLUTTER_SERVE_CMD = flutter run -d chrome 
