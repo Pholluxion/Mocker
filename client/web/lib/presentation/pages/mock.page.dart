@@ -1,6 +1,6 @@
-import 'package:dynamic_tabbar/dynamic_tabbar.dart';
 import 'package:flutter/material.dart';
 
+import 'package:dynamic_tabbar/dynamic_tabbar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:get_it/get_it.dart';
@@ -8,6 +8,19 @@ import 'package:shared/shared.dart';
 
 import 'package:mocker/domain/domain.dart';
 import 'package:mocker/presentation/presentation.dart';
+
+const colors = <MaterialColor>[
+  Colors.blue,
+  Colors.purple,
+  Colors.green,
+  Colors.red,
+  Colors.indigo,
+  Colors.pink,
+  Colors.blueGrey,
+  Colors.orange,
+  Colors.cyan,
+  Colors.amber,
+];
 
 /// The mock page.
 class MockPage extends StatelessWidget {
@@ -333,10 +346,10 @@ class _ControlPanel extends StatelessWidget {
               tooltip: 'Run',
               onPressed: () {
                 if (state.parameters.any((element) => element.value.isEmpty)) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please fill all the parameters'),
-                    ),
+                  AppDialog.info(
+                    context: context,
+                    title: 'Error in parameters',
+                    content: 'Please fill all the parameters',
                   );
                   return;
                 }
@@ -424,8 +437,6 @@ class _ConsoleViewState extends State<_ConsoleView> {
           );
         }
 
-        const colors = Colors.primaries;
-
         final names = mockCubit.buffer.map((e) => e.name).toSet();
 
         final mapNameColor = names.fold<Map<String, Color>>(
@@ -478,8 +489,6 @@ class _ChartView extends StatelessWidget {
             }
             final data = mockCubit.getDataByName(name);
 
-            const colors = Colors.primaries;
-
             final names = mockCubit.buffer.map((e) => e.name).toSet();
 
             final mapNameColor = names.fold<Map<String, Color>>(
@@ -509,7 +518,7 @@ class _ChartView extends StatelessWidget {
           backIcon: const Icon(Icons.keyboard_double_arrow_left),
           dynamicTabs: tabs.values.toList(),
           onTabControllerUpdated: (controller) {},
-          onAddTabMoveTo: MoveToTab.first,
+          onAddTabMoveTo: MoveToTab.idol,
         );
       },
     );

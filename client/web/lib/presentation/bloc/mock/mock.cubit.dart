@@ -3,9 +3,9 @@ import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:mocker/data/repository/mock.repository.dart';
 import 'package:shared/shared.dart';
 
+import 'package:mocker/data/repository/mock.repository.dart';
 import 'package:mocker/domain/domain.dart';
 
 class MockCubit extends Cubit<MockState> {
