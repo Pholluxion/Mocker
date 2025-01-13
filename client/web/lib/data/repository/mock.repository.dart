@@ -3,10 +3,11 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:mocker/data/data/data.model.dart';
-import 'package:mocker/domain/domain.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+
+import 'package:mocker/data/data/data.model.dart';
+import 'package:mocker/domain/domain.dart';
 
 class MockRepositoryImpl implements MockRepository {
   final Uri uri;

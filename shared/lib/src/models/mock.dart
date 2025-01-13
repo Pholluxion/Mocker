@@ -1,4 +1,4 @@
-import 'models.dart';
+import 'package:shared/shared.dart';
 
 /// An mock that can be emitted.
 class Mock {
@@ -48,6 +48,10 @@ class Mock {
         mqtt: json['mqtt'] as bool,
         parameters: (json['parameters'] as List<dynamic>?)?.map((e) => Param.fromJson(e)).toList() ?? [],
       );
+
+  factory Mock.fromYaml(String yaml) {
+    return Mock.fromJson(Yaml.yamlToJson(yaml));
+  }
 
   Map<String, dynamic> toJson() => {
         'handler': handler,

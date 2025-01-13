@@ -1,5 +1,6 @@
-import 'package:mocker/domain/domain.dart';
 import 'package:shared/shared.dart';
+
+import 'package:mocker/domain/domain.dart';
 
 class DataModel {
   final String name;

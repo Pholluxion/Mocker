@@ -4,7 +4,7 @@ import 'package:yaml/yaml.dart';
 import 'package:yaml_edit/yaml_edit.dart';
 
 /// YamlParser class
-abstract class YamlParser {
+abstract class Yaml {
   /// jsonToYaml method converts a json to yaml
   static String jsonToYaml(Map<String, dynamic> data) {
     final yamlEditor = YamlEditor('');

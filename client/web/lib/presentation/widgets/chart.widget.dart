@@ -3,6 +3,7 @@ import 'dart:math' show max, min;
 import 'package:flutter/material.dart';
 
 import 'package:fl_chart/fl_chart.dart';
+
 import 'package:mocker/domain/domain.dart';
 
 class DataDistributionChart extends StatelessWidget {

@@ -69,7 +69,7 @@ class _SourceCodeViewerState extends State<SourceCodeViewer> {
 
   @override
   void initState() {
-    code = YamlParser.jsonToYaml(widget.data.toJson());
+    code = Yaml.jsonToYaml(widget.data.toJson());
     super.initState();
   }
 
