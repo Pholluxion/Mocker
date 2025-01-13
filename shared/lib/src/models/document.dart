@@ -1,9 +1,11 @@
+import 'package:shared/src/models/models.dart';
+
 class Document {
   final String id;
   final String name;
   final String path;
   final String description;
-  final List<String> parameters;
+  final List<Param> parameters;
 
   Document({
     required this.id,
@@ -27,7 +29,7 @@ class Document {
       path: json['path'] as String,
       name: json['name'] as String,
       description: json['description'] as String,
-      parameters: List<String>.from(json['parameters'] as List),
+      parameters: (json['parameters'] as List).map((e) => Param.fromJson(e)).toList(),
     );
   }
 
@@ -38,4 +40,6 @@ class Document {
         'description': description,
         'parameters': parameters,
       };
+
+  Runner get toRunner => Runner(handler: path, parameters: parameters);
 }

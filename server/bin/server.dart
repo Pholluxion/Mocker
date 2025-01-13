@@ -16,25 +16,10 @@ void main(List<String> args) async {
 
   final router = Router();
 
-  // router.webSocket(
-  //   '/continuous',
-  //   (webSocket) => ContinuousDistributionPipe(webSocket),
-  // );
-
-  // router.webSocket(
-  //   '/discrete',
-  //   (webSocket) => DiscreteDistributionPipe(webSocket),
-  // );
-
   router.webSocket(
     '/distribution',
     (webSocket) => DistributionPipe(webSocket),
   );
-
-  // router.webSocket(
-  //   '/step',
-  //   (webSocket) => StepDistribution(webSocket),
-  // );
 
   router.get(
     '/definitions',
@@ -44,7 +29,6 @@ void main(List<String> args) async {
         [
           ...continuousDefinitions.map((e) => e.toJson()),
           ...discreteDefinitions.map((e) => e.toJson()),
-          // ...stepDefinitions.map((e) => e.toJson()),
         ],
       ),
     ),
@@ -67,21 +51,32 @@ final List<Document> continuousDefinitions = [
     name: 'normal',
     path: '/continuous/normal',
     description: 'Parameters are mean and standard deviation (mu, sigma) ',
-    parameters: ['mu', 'sigma', "name"],
+    parameters: [
+      Param(key: 'mu', value: '0'),
+      Param(key: 'sigma', value: '1'),
+      Param(key: 'name', value: 'normal-continuous'),
+    ],
   ),
   Document(
     id: Uuid().v4(),
     name: 'uniform',
     path: '/continuous/uniform',
     description: 'Parameters are lower and upper bounds (a, b)',
-    parameters: ['a', 'b', "name"],
+    parameters: [
+      Param(key: 'a', value: '0'),
+      Param(key: 'b', value: '1'),
+      Param(key: 'name', value: 'uniform-continuous'),
+    ],
   ),
   Document(
     id: Uuid().v4(),
     name: 'exponential',
     path: '/continuous/exponential',
     description: 'Parameters are lambda (lambda)',
-    parameters: ['lambda', "name"],
+    parameters: [
+      Param(key: 'lambda', value: '1'),
+      Param(key: 'name', value: 'exponential-continuous'),
+    ],
   )
 ];
 
@@ -91,37 +86,41 @@ final List<Document> discreteDefinitions = [
     name: 'bernoulli',
     path: '/discrete/bernoulli',
     description: 'Parameters are probability of success (p)',
-    parameters: ['p', "name"],
+    parameters: [
+      Param(key: 'p', value: '0.5'),
+      Param(key: 'name', value: 'bernoulli-discrete'),
+    ],
   ),
   Document(
     id: Uuid().v4(),
     name: 'binomial',
     path: '/discrete/binomial',
     description: 'Parameters are number of trials and probability of success (n, p)',
-    parameters: ['n', 'p', "name"],
+    parameters: [
+      Param(key: 'n', value: '10'),
+      Param(key: 'p', value: '0.5'),
+      Param(key: 'name', value: 'binomial-discrete'),
+    ],
   ),
   Document(
     id: Uuid().v4(),
     name: 'poisson',
     path: '/discrete/poisson',
     description: 'Parameters are lambda (lambda) ',
-    parameters: ['lambda', "name"],
+    parameters: [
+      Param(key: 'lambda', value: '1'),
+      Param(key: 'name', value: 'poisson-discrete'),
+    ],
   ),
   Document(
     id: Uuid().v4(),
     name: 'uniform',
     path: '/discrete/uniform',
     description: 'Parameters are lower and upper bounds (a, b)',
-    parameters: ['a', 'b', "name"],
+    parameters: [
+      Param(key: 'a', value: '0'),
+      Param(key: 'b', value: '1'),
+      Param(key: 'name', value: 'uniform-discrete'),
+    ],
   )
 ];
-
-// final List<Document> stepDefinitions = [
-//   Document(
-//     id: Uuid().v4(),
-//     name: 'step',
-//     path: '/step',
-//     description: 'Parameters are step size (step)',
-//     parameters: ['step'],
-//   ),
-// ];

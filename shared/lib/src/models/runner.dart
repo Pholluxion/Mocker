@@ -1,20 +1,20 @@
 import 'package:shared/src/models/models.dart';
 
-class FunctionModel {
+class Runner {
   final String handler;
   final List<Param> parameters;
 
-  FunctionModel({
+  Runner({
     required this.handler,
     required this.parameters,
   });
 
-  FunctionModel copyWith({
+  Runner copyWith({
     String? name,
     String? handler,
     List<Param>? parameters,
   }) {
-    return FunctionModel(
+    return Runner(
       handler: handler ?? this.handler,
       parameters: parameters ?? this.parameters,
     );
@@ -25,7 +25,7 @@ class FunctionModel {
         'parameters': parameters.map((e) => e.toJson()).toList(),
       };
 
-  factory FunctionModel.fromJson(Map<String, dynamic> json) => FunctionModel(
+  factory Runner.fromJson(Map<String, dynamic> json) => Runner(
         handler: json['handler'] as String,
         parameters: (json['parameters'] as List<dynamic>).map((e) => Param.fromJson(e)).toList(),
       );

@@ -98,7 +98,7 @@ class DistributionPipe extends Pipe<DistributionMock> {
     emit(state.copyWith(messages: updatedMessages));
   }
 
-  DiscreteDistributionValue discreteUniformSample(FunctionModel fn) {
+  DiscreteDistributionValue discreteUniformSample(Runner fn) {
     final a = fn.getIntParam('a');
     final b = fn.getIntParam('b');
     final name = fn.getStringParam('name');
@@ -108,7 +108,7 @@ class DistributionPipe extends Pipe<DistributionMock> {
     return DiscreteDistributionValue(name: name, value: value);
   }
 
-  DiscreteDistributionValue discreteBernoulliSample(FunctionModel fn) {
+  DiscreteDistributionValue discreteBernoulliSample(Runner fn) {
     final p = fn.getDoubleParam('p');
     final name = fn.getStringParam('name');
 
@@ -117,7 +117,7 @@ class DistributionPipe extends Pipe<DistributionMock> {
     return DiscreteDistributionValue(name: name, value: value);
   }
 
-  DiscreteDistributionValue discreteBinomialSample(FunctionModel fn) {
+  DiscreteDistributionValue discreteBinomialSample(Runner fn) {
     final n = fn.getIntParam('n');
     final p = fn.getDoubleParam('p');
     final name = fn.getStringParam('name');
@@ -127,7 +127,7 @@ class DistributionPipe extends Pipe<DistributionMock> {
     return DiscreteDistributionValue(name: name, value: value);
   }
 
-  DiscreteDistributionValue discretePoissonSample(FunctionModel fn) {
+  DiscreteDistributionValue discretePoissonSample(Runner fn) {
     final lambda = fn.getDoubleParam('lambda');
     final name = fn.getStringParam('name');
 
@@ -138,7 +138,7 @@ class DistributionPipe extends Pipe<DistributionMock> {
 
   /// Continuous distribution samples.
 
-  ContinuousDistributionValue continuousNormalSample(FunctionModel fn) {
+  ContinuousDistributionValue continuousNormalSample(Runner fn) {
     final mu = fn.getDoubleParam('mu');
     final sigma = fn.getDoubleParam('sigma');
     final name = fn.getStringParam('name');
@@ -148,7 +148,7 @@ class DistributionPipe extends Pipe<DistributionMock> {
     return ContinuousDistributionValue(name: name, value: value.fix(1));
   }
 
-  ContinuousDistributionValue continuousUniformSample(FunctionModel fn) {
+  ContinuousDistributionValue continuousUniformSample(Runner fn) {
     final a = fn.getDoubleParam('a');
     final b = fn.getDoubleParam('b');
     final name = fn.getStringParam('name');
@@ -158,7 +158,7 @@ class DistributionPipe extends Pipe<DistributionMock> {
     return ContinuousDistributionValue(name: name, value: value.fix(1));
   }
 
-  ContinuousDistributionValue continuousExponentialSample(FunctionModel fn) {
+  ContinuousDistributionValue continuousExponentialSample(Runner fn) {
     final lambda = fn.getDoubleParam('lambda');
     final name = fn.getStringParam('name');
 

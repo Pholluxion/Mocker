@@ -87,12 +87,7 @@ class MockCubit extends Cubit<MockState> {
   }
 
   void addFunction(Document doc) {
-    final function = FunctionModel(
-      handler: doc.path,
-      parameters: doc.parameters.map((e) => Param(key: e, value: '')).toList(),
-    );
-
-    emit(state.copyWith(functions: [...state.functions, function]));
+    emit(state.copyWith(functions: [...state.functions, doc.toRunner]));
   }
 
   void addParameters(List<Param> parameters) {
@@ -137,7 +132,7 @@ class MockCubit extends Cubit<MockState> {
     emit(state.copyWith(functions: functions));
   }
 
-  void updateFunction(FunctionModel function) {
+  void updateFunction(Runner function) {
     final functions = state.functions.map((fn) => fn.handler == function.handler ? function : fn).toList();
     emit(state.copyWith(functions: functions));
   }
@@ -159,7 +154,7 @@ class MockState extends Equatable {
   final Device? device;
   final List<Document> docs;
   final List<Param> parameters;
-  final List<FunctionModel> functions;
+  final List<Runner> functions;
 
   const MockState({
     this.device,
@@ -172,7 +167,7 @@ class MockState extends Equatable {
     this.intervalMs = 1000,
     this.docs = const <Document>[],
     this.parameters = const <Param>[],
-    this.functions = const <FunctionModel>[],
+    this.functions = const <Runner>[],
   });
 
   MockState copyWith({
@@ -186,7 +181,7 @@ class MockState extends Equatable {
     Device? device,
     List<Document>? docs,
     List<Param>? parameters,
-    List<FunctionModel>? functions,
+    List<Runner>? functions,
   }) {
     return MockState(
       id: id ?? this.id,
@@ -230,7 +225,7 @@ class MockState extends Equatable {
     return device ?? Device.empty();
   }
 
-  (bool, FunctionModel?) getFunction(String hdlr) {
+  (bool, Runner?) getFunction(String hdlr) {
     final fnExists = functions.any((fn) => fn.handler == hdlr);
     if (!fnExists) {
       return (false, null);
