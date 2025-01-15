@@ -29,15 +29,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void initState() {
-    //TODO: Remove this line
-    _usernameController = TextEditingController(
-      text: 'Pholluxion',
-    );
-    //TODO: Remove this line
-    _passwordController = TextEditingController(
-      text: 'qwerty',
-    );
-
     _isPasswordVisible = ValueNotifier<bool>(false);
     super.initState();
   }
