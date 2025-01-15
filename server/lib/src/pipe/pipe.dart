@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:shared/shared.dart';
+import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'package:server/src/pipe/mqtt.dart';
@@ -17,13 +18,15 @@ abstract class Message extends Object {
 
 /// Contract for a message.
 abstract class MockMessage<T> extends Message {
+  final String id;
   final String name;
   final T value;
 
   MockMessage({
+    String? identifier,
     required this.name,
     required this.value,
-  });
+  }) : id = identifier ?? const Uuid().v4();
 
   @override
   Map<String, dynamic> format() => {name: value};
@@ -33,7 +36,19 @@ abstract class MockMessage<T> extends Message {
 }
 
 abstract class MultiMessage extends Message {
-  void add(MockMessage message);
+  final List<MockMessage> messages;
+
+  MultiMessage(this.messages);
+
+  @override
+  Map<String, dynamic> format() => Map.fromEntries(
+        messages.map((e) => MapEntry(e.name, e.value)),
+      );
+
+  @override
+  Object? toJson() => messages.map((message) => message.toJson()).toList();
+
+  void add(MockMessage message) => messages.add(message);
 }
 
 /// A callback that handles an mock.
@@ -80,7 +95,7 @@ abstract class Closable {
 /// A class that manages the state of the application.
 abstract class Pipe<State extends Message> implements MessageEmitter<State>, EventHandler, Closable, EventTransformer {
   /// The socket channel.
-  final WebSocketChannel _webSocketChannel;
+  final WebSocketChannel channel;
 
   /// The MQTT client.
   late MQTTClient _mqttClient;
@@ -115,12 +130,15 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
   @override
   bool get isClosed => _isClosed;
 
-  Pipe(this._webSocketChannel, {required State initialState}) : _state = initialState {
+  Pipe(
+    this.channel, {
+    required State initialState,
+  }) : _state = initialState {
     /// Initialize the MQTT client.
     _mqttClient = MQTTClient.defaultClient();
 
     /// Listen to the stream of the socket channel.
-    _subscription = _webSocketChannel.stream.listen(handle, onDone: close);
+    _subscription = channel.stream.listen(handle, onDone: close);
 
     /// Set default handlers for the mocks.
     ///
@@ -254,7 +272,7 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
     try {
       // stdout.writeln('Sending state to the socket channel...${state.toJson()}');
       /// Send the state to the socket channel.
-      _webSocketChannel.sink.add(json.encode(state.toJson()));
+      channel.sink.add(json.encode(state.toJson()));
 
       /// Send the state to the MQTT broker.
       _sendToMQTTBroker(state.format());
@@ -302,7 +320,7 @@ abstract class Pipe<State extends Message> implements MessageEmitter<State>, Eve
     _subscription?.cancel();
 
     /// Close the socket channel.
-    _webSocketChannel.sink.close();
+    channel.sink.close();
 
     /// Close the MQTT client.
     _mqttClient.disconnect();

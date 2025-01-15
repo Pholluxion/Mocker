@@ -41,5 +41,9 @@ class Document {
         'parameters': parameters,
       };
 
-  Runner get toRunner => Runner(handler: path, parameters: parameters);
+  Runner get toRunner => Runner(
+        handler: path,
+        parameters: parameters,
+        enabled: false,
+      );
 }
