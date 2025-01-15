@@ -17,8 +17,9 @@ class StepDistribution extends Pipe<StepState> {
 
   void stepSample(Mock mock) {
     final value = mock.getIntParam('step');
+    final name = mock.getStringParam('name');
 
-    final state = StepState(name: mock.name, value: value);
+    final state = StepState(name: name, value: value);
 
     emit(state);
   }

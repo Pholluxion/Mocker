@@ -1,5 +1,9 @@
-export 'chart.widget.dart';
-export 'dialog.widget.dart';
 export 'adaptive.widget.dart';
+export 'chart.widget.dart';
+export 'console.widget.dart';
+export 'dialog.widget.dart';
+export 'menu.widget.dart';
+export 'parameter.widget.dart';
+export 'tabbar.dart';
 export 'theme.button.widget.dart';
 export 'viewer.widget.dart.dart';

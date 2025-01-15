@@ -6,10 +6,7 @@ class Mock {
   final String handler;
 
   /// The list of functions that should be called.
-  final List<FunctionModel> functions;
-
-  /// The name of the mock.
-  final String name;
+  final List<Runner> functions;
 
   /// The duration of the mock.
   final int intervalMs;
@@ -22,7 +19,6 @@ class Mock {
 
   Mock({
     required this.handler,
-    required this.name,
     required this.functions,
     required this.intervalMs,
     required this.parameters,
@@ -33,7 +29,6 @@ class Mock {
 
   factory Mock.empty() => Mock(
         handler: '',
-        name: '',
         functions: [],
         intervalMs: 0,
         mqtt: false,
@@ -42,8 +37,7 @@ class Mock {
 
   factory Mock.fromJson(Map<String, dynamic> json) => Mock(
         handler: json['handler'] as String,
-        name: json['name'] as String,
-        functions: (json['functions'] as List<dynamic>?)?.map((e) => FunctionModel.fromJson(e)).toList() ?? [],
+        functions: (json['functions'] as List<dynamic>?)?.map((e) => Runner.fromJson(e)).toList() ?? [],
         intervalMs: json['intervalMs'] as int,
         mqtt: json['mqtt'] as bool,
         parameters: (json['parameters'] as List<dynamic>?)?.map((e) => Param.fromJson(e)).toList() ?? [],
@@ -55,10 +49,9 @@ class Mock {
 
   Map<String, dynamic> toJson() => {
         'handler': handler,
-        'name': name,
+        'mqtt': mqtt,
         'intervalMs': intervalMs,
         'functions': functions,
-        'mqtt': mqtt,
         'parameters': parameters,
       };
 
@@ -68,10 +61,9 @@ class Mock {
     String? name,
     String? handler,
     List<Param>? parameters,
-    List<FunctionModel>? functions,
+    List<Runner>? functions,
   }) {
     return Mock(
-      name: name ?? this.name,
       mqtt: mqtt ?? this.mqtt,
       handler: handler ?? this.handler,
       functions: functions ?? this.functions,

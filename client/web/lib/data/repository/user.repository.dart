@@ -9,6 +9,7 @@ class UserRepositoryImpl implements UserRepository {
   final Dio _httpClient;
 
   User? _user;
+  List<Device> _devices = [];
 
   @override
   Future<User> signIn(String userName, String password) async {
@@ -50,6 +51,8 @@ class UserRepositoryImpl implements UserRepository {
       if (response.statusCode == 200) {
         final devices = (response.data as List).map((e) => Device.fromJson(e)).toList();
 
+        _devices = devices;
+
         return devices;
       } else {
         throw UserException('Failed to get devices');
@@ -58,4 +61,7 @@ class UserRepositoryImpl implements UserRepository {
       throw UserException(e.toString());
     }
   }
+
+  @override
+  List<Device> get devices => _devices;
 }

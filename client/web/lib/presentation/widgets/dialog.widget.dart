@@ -1,4 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+import 'package:shared/shared.dart';
+
+import 'package:mocker/presentation/presentation.dart';
 
 abstract class AppDialog {
   static Future<T?> confirm<T>({
@@ -45,6 +50,33 @@ abstract class AppDialog {
                 child: const Text('Accept'),
               ),
             ],
+          );
+        },
+      );
+
+  static Future<T?> showCodeViewer<T>({
+    required Mock mock,
+    required BuildContext context,
+  }) =>
+      showDialog<T>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: SizedBox(
+              width: 600,
+              child: Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  SourceCodeViewer<Mock>(data: mock),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+            ),
           );
         },
       );

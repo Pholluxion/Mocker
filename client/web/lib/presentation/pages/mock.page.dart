@@ -1,6 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'package:dynamic_tabbar/dynamic_tabbar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:get_it/get_it.dart';
@@ -41,15 +41,20 @@ class MockPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocProvider(
-        lazy: false,
-        create: (context) => MockCubit(
-          'ws://$serverHost:$serverPort/distribution',
-          GetIt.I.get<DocsRepository>(),
-        )..getDocs(),
-        child: const MockView(),
-      ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          lazy: false,
+          create: (context) => MockCubit(
+            'ws://$serverHost:$serverPort/distribution',
+            GetIt.I.get<DocsRepository>(),
+          )..getDocs(),
+        ),
+        BlocProvider(
+          create: (context) => ChartCubit(),
+        ),
+      ],
+      child: const MockView(),
     );
   }
 }
@@ -58,37 +63,31 @@ class MockView extends StatelessWidget {
   const MockView({super.key});
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              flex: 2,
-              child: BlocBuilder<MockCubit, MockState>(
-                builder: (context, state) {
-                  return const AdaptiveWidget(
-                    dividerPosition: 0.7,
-                    topChild: _ChartView(),
-                    bottomChild: _ConsoleView(),
-                  );
-                },
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(
+                flex: 2,
+                child: _ChartView(),
               ),
-            ),
-            Visibility(
-              visible: constraints.maxWidth > 600,
-              child: const VerticalDivider(),
-            ),
-            Visibility(
-              visible: constraints.maxWidth > 600,
-              child: const Expanded(
-                flex: 1,
-                child: _SimulationForm(),
+              Visibility(
+                visible: constraints.maxWidth > 600,
+                child: const VerticalDivider(),
               ),
-            ),
-          ],
-        );
-      },
+              Visibility(
+                visible: constraints.maxWidth > 600,
+                child: const Expanded(
+                  flex: 1,
+                  child: _SimulationForm(),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -104,15 +103,157 @@ class _SimulationFormState extends State<_SimulationForm> with AutomaticKeepAliv
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return const Padding(
-      padding: EdgeInsets.all(8.0),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
       child: Column(
         spacing: 8,
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _ControlPanel(),
-          _MockForm(),
+          Card.outlined(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Center(
+                child: Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  runAlignment: WrapAlignment.center,
+                  children: [
+                    Builder(
+                      builder: (context) {
+                        final user = context.watch<UserCubit>();
+                        final mock = context.watch<MockCubit>();
+
+                        return MenuButton(
+                          width: 200,
+                          tooltip: 'Set device',
+                          icon: const Icon(Icons.devices),
+                          items: user.state.devices.map(
+                            (device) {
+                              return MenuItem(
+                                text: device.deviceName,
+                                icon: Icons.devices,
+                                onPressed: (context) => mock.addDeviceParams(device),
+                              );
+                            },
+                          ).toList(),
+                        );
+                      },
+                    ),
+                    BlocBuilder<MockCubit, MockState>(
+                      builder: (context, state) {
+                        if (!state.isDeviceIdPresent) {
+                          return const Opacity(
+                            opacity: 0.5,
+                            child: Icon(CupertinoIcons.function),
+                          );
+                        }
+                        return MenuButton(
+                          width: 300,
+                          tooltip: 'Add handler',
+                          icon: const Icon(CupertinoIcons.function),
+                          items: state.docs.map(
+                            (doc) {
+                              return MenuItem(
+                                text: doc.path,
+                                icon: Icons.add,
+                                onPressed: (context) {
+                                  context.read<MockCubit>().addFunction(doc);
+                                },
+                              );
+                            },
+                          ).toList(),
+                        );
+                      },
+                    ),
+                    BlocBuilder<MockCubit, MockState>(
+                      builder: (context, state) {
+                        if (state.functions.isEmpty) {
+                          return const Opacity(
+                            opacity: 0.5,
+                            child: Icon(Icons.tune),
+                          );
+                        }
+                        return Tooltip(
+                          message: 'Add custom parameter',
+                          child: GestureDetector(
+                            child: const Icon(Icons.tune),
+                            onTap: () => context.read<MockCubit>().addCustomParam(Param(key: 'name', value: 'value')),
+                          ),
+                        );
+                      },
+                    ),
+                    BlocBuilder<MockCubit, MockState>(
+                      builder: (context, state) {
+                        return Tooltip(
+                          message: 'Import',
+                          child: GestureDetector(
+                            onTap: context.read<MockCubit>().loadYaml,
+                            child: const Icon(Icons.upload),
+                          ),
+                        );
+                      },
+                    ),
+                    BlocBuilder<MockCubit, MockState>(
+                      builder: (context, state) {
+                        if (state.functions.isEmpty) {
+                          return const Opacity(
+                            opacity: 0.5,
+                            child: Icon(Icons.download),
+                          );
+                        }
+                        return Tooltip(
+                          message: 'Export',
+                          child: GestureDetector(
+                            onTap: context.read<MockCubit>().saveYaml,
+                            child: const Icon(Icons.download),
+                          ),
+                        );
+                      },
+                    ),
+                    BlocBuilder<MockCubit, MockState>(
+                      builder: (context, state) {
+                        if (state.functions.isEmpty) {
+                          return const Opacity(
+                            opacity: 0.5,
+                            child: Icon(Icons.refresh),
+                          );
+                        }
+                        return Tooltip(
+                          message: 'Reset',
+                          child: GestureDetector(
+                            onTap: context.read<MockCubit>().clear,
+                            child: const Icon(Icons.refresh),
+                          ),
+                        );
+                      },
+                    ),
+                    BlocBuilder<MockCubit, MockState>(
+                      builder: (context, state) {
+                        if (state.functions.isEmpty) {
+                          return const Opacity(
+                            opacity: 0.5,
+                            child: Icon(Icons.preview),
+                          );
+                        }
+                        return Tooltip(
+                          message: 'Preview',
+                          child: GestureDetector(
+                            onTap: () {
+                              final state = context.read<MockCubit>().state;
+                              AppDialog.showCodeViewer(mock: state.getMock, context: context);
+                            },
+                            child: const Icon(Icons.preview),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const _MockForm(),
         ],
       ),
     );
@@ -122,48 +263,76 @@ class _SimulationFormState extends State<_SimulationForm> with AutomaticKeepAliv
   bool get wantKeepAlive => true;
 }
 
-class DeviceTile extends StatelessWidget {
-  const DeviceTile({
-    super.key,
-  });
+class MockTile extends StatelessWidget {
+  const MockTile({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Builder(
-      builder: (context) {
-        final user = context.watch<UserCubit>().state;
-        final mock = context.watch<MockCubit>().state;
-        return ExpansionTile(
-          maintainState: true,
-          title: const Text('Select a device'),
-          subtitle: Text(
-            mock.device?.deviceName ?? 'No device selected',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+    return BlocBuilder<MockCubit, MockState>(
+      builder: (context, state) {
+        return Visibility(
+          visible: state.functions.isNotEmpty,
+          child: Column(
+            spacing: 8,
+            children: [
+              ...state.functions.map(
+                (fn) {
+                  final fnName = fn.getStringParam('name');
+                  final isEnabled = fn.enabled;
+
+                  return ExpansionTile(
+                    title: Text(fn.getStringParam('name')),
+                    subtitle: Text(fn.handler),
+                    leading: IconButton(
+                      tooltip: 'Toggle simulation state',
+                      onPressed: () {
+                        final isValid = context.read<MockCubit>().toggleFunctionState(fnName);
+
+                        if (!isValid) {
+                          topSnackBar(context, 'Ups! The simulation $fnName is not valid, please check the parameters');
+                        }
+                      },
+                      icon: Icon(isEnabled ? Icons.stop : Icons.play_arrow),
+                    ),
+                    trailing: IconButton(
+                      tooltip: 'Remove simulation',
+                      onPressed: () => context.read<MockCubit>().removeFunction(fnName),
+                      icon: const Icon(Icons.delete),
+                    ),
+                    initiallyExpanded: true,
+                    collapsedBackgroundColor: Colors.black12,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: const BorderSide(width: 1),
+                    ),
+                    collapsedShape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: const BorderSide(width: 1),
+                    ),
+                    children: <Widget>[
+                      ...fn.parameters.map(
+                        (param) {
+                          return Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: ParameterInputField(
+                              enabled: !isEnabled,
+                              param: param,
+                              visible: true,
+                              onChanged: (p) {
+                                context.read<MockCubit>().updateFunctionParam(
+                                      param.copyWith(value: p.value),
+                                    );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
+              )
+            ],
           ),
-          leading: const Icon(Icons.devices),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          collapsedBackgroundColor: mock.device != null ? Colors.black12 : Colors.transparent,
-          children: <Widget>[
-            ...user.devices.map(
-              (device) {
-                return Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: ListTile(
-                    tileColor: Colors.black12,
-                    title: Text(device.deviceName),
-                    shape: device.deviceId == mock.device?.deviceId
-                        ? RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: const BorderSide(width: 2),
-                          )
-                        : RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    onTap: () => context.read<MockCubit>().setDevice(device),
-                  ),
-                );
-              },
-            )
-          ],
         );
       },
     );
@@ -183,138 +352,152 @@ class _MockForm extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: 8,
             children: [
-              const Text('Select a device', style: TextStyle(fontWeight: FontWeight.bold)),
-              const DeviceTile(),
               BlocBuilder<MockCubit, MockState>(
                 builder: (context, state) {
-                  if (state.device == null) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Flexible(flex: 1, child: Text('Name')),
-                      Flexible(
-                        flex: 2,
-                        child: TextField(
-                          decoration: InputDecoration(hintText: state.name.toString()),
-                          onChanged: (value) => context.read<MockCubit>().setName(value),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-              BlocBuilder<MockCubit, MockState>(
-                builder: (context, state) {
-                  if (state.device == null) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Flexible(flex: 1, child: Text('Interval (ms)')),
-                      Flexible(
-                        flex: 2,
-                        child: TextField(
-                          decoration: InputDecoration(hintText: state.intervalMs.toString()),
-                          onChanged: (value) => context.read<MockCubit>().setIntervalMs(int.parse(value)),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-              BlocBuilder<MockCubit, MockState>(
-                builder: (context, state) {
-                  if (state.device == null) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Flexible(flex: 2, child: Text('Enable MQTT')),
-                      Flexible(
-                        flex: 1,
-                        child: Switch(
-                          value: state.mqtt,
-                          onChanged: (value) => context.read<MockCubit>().setMqtt(value),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-              const Text('Select a method', style: TextStyle(fontWeight: FontWeight.bold)),
-              BlocBuilder<MockCubit, MockState>(
-                builder: (context, state) {
-                  return Column(
-                    spacing: 8,
-                    children: [
-                      ...state.docs.map(
-                        (doc) {
-                          final fn = state.getFunction(doc.path);
-
-                          return ExpansionTile(
-                            enabled: fn.$1,
-                            title: Text(doc.path),
-                            subtitle: Text(doc.description),
-                            collapsedBackgroundColor: fn.$1 ? Colors.black12 : Colors.transparent,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            leading: Checkbox(
-                              value: state.getFunction(doc.path).$1,
-                              onChanged: state.device != null
-                                  ? (value) {
-                                      if (value == null) return;
-
-                                      if (value) {
-                                        context.read<MockCubit>().addFunction(doc);
-                                      } else {
-                                        context.read<MockCubit>().removeFunction(doc.path);
-                                      }
-                                    }
-                                  : null,
-                            ),
-                            children: <Widget>[
-                              if (fn.$2 != null)
-                                ...fn.$2!.parameters.map(
-                                  (param) {
-                                    return Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Flexible(flex: 1, child: Text(param.key)),
-                                          Flexible(
-                                            flex: 2,
-                                            child: TextField(
-                                              maxLength: 50,
-                                              enabled: fn.$1,
-                                              key: ValueKey(key),
-                                              decoration: InputDecoration(hintText: param.value),
-                                              onChanged: (value) => context.read<MockCubit>().updateFunctionParam(
-                                                    fn.$2!.handler,
-                                                    Param(
-                                                      key: param.key,
-                                                      value: value,
-                                                    ),
-                                                  ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
+                  return Visibility(
+                    visible: state.canEdit,
+                    child: const Card.filled(
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              Icon(Icons.info_outline),
+                              Text('Stop the simulation to edit the parameters'),
                             ],
-                          );
-                        },
-                      )
-                    ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return Visibility(
+                    visible: state.functions.isNotEmpty,
+                    child: const Text('Simulation', style: TextStyle(fontWeight: FontWeight.bold)),
+                  );
+                },
+              ),
+              const MockTile(),
+              BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return Visibility(
+                    visible: state.functions.isNotEmpty,
+                    child: const Divider(),
+                  );
+                },
+              ),
+              BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return Visibility(
+                    visible: state.isDeviceIdPresent,
+                    child: const Text('Default parameters', style: TextStyle(fontWeight: FontWeight.bold)),
+                  );
+                },
+              ),
+              BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return ParameterCheckBox(
+                    enabled: !state.canEdit,
+                    visible: state.isDeviceIdPresent,
+                    fieldName: 'MQTT',
+                    onChanged: context.read<MockCubit>().setMqtt,
+                    value: state.mqtt,
+                  );
+                },
+              ),
+              BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return ParameterInputField(
+                    enabled: !state.canEdit,
+                    param: Param(key: 'intervalMs', value: '${state.intervalMs}'),
+                    visible: state.isDeviceIdPresent,
+                    onChanged: (p) => context.read<MockCubit>().setIntervalMs(p.value),
+                  );
+                },
+              ),
+              BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return Visibility(
+                    visible: state.isDeviceIdPresent,
+                    child: const Divider(),
+                  );
+                },
+              ),
+              BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return Visibility(
+                    visible: state.isDeviceIdPresent,
+                    child: const Text('Device parameters', style: TextStyle(fontWeight: FontWeight.bold)),
+                  );
+                },
+              ),
+              BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return Visibility(
+                    visible: state.isDeviceIdPresent,
+                    child: Column(
+                      children: [
+                        ...state.parameters.map(
+                          (param) {
+                            return Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: ParameterInputField(
+                                enabled: !state.canEdit,
+                                param: param,
+                                visible: true,
+                                onChanged: context.read<MockCubit>().updateOrAddParam,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return Visibility(
+                    visible: state.customParameters.isNotEmpty,
+                    child: const Divider(),
+                  );
+                },
+              ),
+              BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return Visibility(
+                    visible: state.customParameters.isNotEmpty,
+                    child: const Text('Custom parameters', style: TextStyle(fontWeight: FontWeight.bold)),
+                  );
+                },
+              ),
+              BlocBuilder<MockCubit, MockState>(
+                builder: (context, state) {
+                  return Visibility(
+                    visible: state.customParameters.isNotEmpty,
+                    child: Column(
+                      children: [
+                        ...state.customParameters.map(
+                          (param) {
+                            return Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: CustomParameterInputField(
+                                enabled: !state.canEdit,
+                                param: param,
+                                visible: true,
+                                onChanged: context.read<MockCubit>().updateOrAddCustomParam,
+                                onRemove: context.read<MockCubit>().removeCustomParam,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -327,200 +510,85 @@ class _MockForm extends StatelessWidget {
   }
 }
 
-class _ControlPanel extends StatelessWidget {
-  const _ControlPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<MockCubit, MockState>(
-      builder: (context, state) {
-        if (state.functions.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            IconButton.filled(
-              tooltip: 'Run',
-              onPressed: () {
-                if (state.parameters.any((element) => element.value.isEmpty)) {
-                  AppDialog.info(
-                    context: context,
-                    title: 'Error in parameters',
-                    content: 'Please fill all the parameters',
-                  );
-                  return;
-                }
-
-                context.read<MockCubit>().add();
-              },
-              icon: const Icon(Icons.play_arrow),
-            ),
-            IconButton.filled(
-              tooltip: 'Stop',
-              onPressed: () => context.read<MockCubit>().stop(),
-              icon: const Icon(Icons.stop),
-            ),
-            IconButton.filled(
-              tooltip: 'Show Raw Data',
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      content: SizedBox(
-                        width: 600,
-                        child: Stack(
-                          alignment: Alignment.topRight,
-                          children: [
-                            SourceCodeViewer<Mock>(data: state.getMock),
-                            IconButton.outlined(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-              icon: const Icon(Icons.share),
-            ),
-            IconButton.filled(
-              tooltip: 'Clear',
-              onPressed: () => context.read<MockCubit>().clear(),
-              icon: const Icon(Icons.replay),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _ConsoleView extends StatefulWidget {
-  const _ConsoleView();
-
-  @override
-  State<_ConsoleView> createState() => _ConsoleViewState();
-}
-
-class _ConsoleViewState extends State<_ConsoleView> {
-  late final ScrollController _scrollController;
-
-  @override
-  void initState() {
-    _scrollController = ScrollController();
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final mockCubit = context.watch<MockCubit>();
-    return StreamBuilder<List<Data>>(
-      stream: mockCubit.getData(),
-      builder: (context, snapshot) {
-        if (mockCubit.isBufferEmpty) {
-          return const Center(
-            child: Text('No data available'),
-          );
-        }
-
-        final names = mockCubit.buffer.map((e) => e.name).toSet();
-
-        final mapNameColor = names.fold<Map<String, Color>>(
-          {},
-          (previousValue, element) {
-            final index = names.toList().indexOf(element);
-            return previousValue..addAll({element: colors[index % colors.length]});
-          },
-        );
-
-        return ListView.builder(
-          controller: _scrollController,
-          itemCount: mockCubit.buffer.length,
-          itemBuilder: (context, index) {
-            return Text(
-              mockCubit.buffer[index].toString(),
-              style: TextStyle(color: mapNameColor[mockCubit.buffer[index].name]),
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
 class _ChartView extends StatelessWidget {
   const _ChartView();
 
   @override
   Widget build(BuildContext context) {
-    final mockCubit = context.watch<MockCubit>();
+    return BlocBuilder<MockCubit, MockState>(
+      builder: (context, state) {
+        final enabled = state.functions.where((element) => element.enabled).toList();
 
-    return StreamBuilder<List<Data>>(
-      stream: mockCubit.getData(),
-      builder: (context, snapshot) {
-        if (mockCubit.state.functions.isEmpty || mockCubit.isBufferEmpty) {
-          return const Center(child: Icon(Icons.bar_chart, size: 48));
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: CircularProgressIndicator.adaptive());
-        }
-
-        final tabs = mockCubit.state.functions.fold<Map<int, TabData>>(
-          {},
-          (previousValue, element) {
-            final name = element.getStringParam('name');
-
-            if (!mockCubit.state.validateFunctionParams(element.handler)) {
-              return previousValue;
-            }
-            final data = mockCubit.getDataByName(name);
-
-            final names = mockCubit.buffer.map((e) => e.name).toSet();
-
-            final mapNameColor = names.fold<Map<String, Color>>(
-              {},
-              (previousValue, element) {
-                final index = names.toList().indexOf(element);
-                return previousValue..addAll({element: colors[index % colors.length]});
-              },
+        List<TabData> tabs = enabled.asMap().entries.map(
+          (entry) {
+            final index = entry.key;
+            final function = entry.value;
+            final name = function.getStringParam('name');
+            final color = colors[index % colors.length];
+            return TabData(
+              index: index,
+              title: Tab(child: Text(name)),
+              content: _ChartTab(name: name, color: color),
             );
-
-            final tab = TabData(
-              index: previousValue.length,
-              title: Tab(text: name),
-              content: DataDistributionChart(data: data, color: mapNameColor[name] ?? Colors.blue),
-            );
-            return previousValue..addAll({previousValue.length: tab});
           },
-        );
+        ).toList();
 
         if (tabs.isEmpty) {
           return const Center(child: Icon(Icons.bar_chart, size: 48));
         }
-
         return DynamicTabBarWidget(
           isScrollable: true,
           nextIcon: const Icon(Icons.keyboard_double_arrow_right),
           backIcon: const Icon(Icons.keyboard_double_arrow_left),
-          dynamicTabs: tabs.values.toList(),
+          dynamicTabs: tabs,
           onTabControllerUpdated: (controller) {},
-          onAddTabMoveTo: MoveToTab.idol,
+          onTabChanged: (p0) {},
         );
       },
     );
   }
+}
+
+class _ChartTab extends StatelessWidget {
+  const _ChartTab({
+    required this.name,
+    required this.color,
+  });
+
+  final String name;
+  final MaterialColor color;
+
+  @override
+  Widget build(BuildContext context) {
+    return AdaptiveWidget(
+      dividerPosition: 0.5,
+      topChild: ChartView(
+        stream: context.read<MockCubit>().getDataByName(name),
+        color: color,
+      ),
+      bottomChild: ConsoleView(
+        stream: context.read<MockCubit>().getDataByName(name),
+        color: color,
+      ),
+    );
+  }
+}
+
+ScaffoldFeatureController<SnackBar, SnackBarClosedReason> topSnackBar(BuildContext context, String message) {
+  final size = MediaQuery.sizeOf(context);
+
+  return ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      duration: const Duration(seconds: 1),
+      content: Text(message),
+      margin: EdgeInsets.only(
+        top: size.height * 0.9,
+        right: size.width * 0.8,
+        bottom: 16.0,
+        left: 16.0,
+      ),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ),
+  );
 }

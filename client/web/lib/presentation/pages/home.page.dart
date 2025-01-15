@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:dynamic_tabbar/dynamic_tabbar.dart';
-
 import 'package:mocker/presentation/presentation.dart';
 
 /// The detail overview page.
@@ -17,7 +15,9 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: TabView());
+    return const Scaffold(
+      body: TabView(),
+    );
   }
 }
 
@@ -75,7 +75,8 @@ class _TabViewState extends State<TabView> {
 
         return DynamicTabBarWidget(
           isScrollable: true,
-          leading: addTabBtn(),
+          enableFeedback: true,
+          trailing: addTabBtn(),
           nextIcon: const Icon(Icons.keyboard_double_arrow_right),
           backIcon: const Icon(Icons.keyboard_double_arrow_left),
           indicatorSize: TabBarIndicatorSize.tab,

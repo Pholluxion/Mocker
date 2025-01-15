@@ -5,21 +5,14 @@ import 'package:go_router/go_router.dart';
 
 import 'package:mocker/presentation/presentation.dart';
 
-/// The root navigator key for the main router of the app.
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
 final GlobalKey<NavigatorState> _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 final GlobalKey<NavigatorState> _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 
-/// The [AppRouter] maintains the main route configuration for the app.
-///
-/// Routes that are `fullScreenDialogs` should also set `_rootNavigatorKey` as
-/// the `parentNavigatorKey` to ensure that the dialog is displayed correctly.
 class AppRouter {
-  /// The authentication status of the user.
   static ValueNotifier<bool> authenticatedNotifier = ValueNotifier<bool>(false);
 
-  /// The router with the routes of pages that should be displayed.
   static final GoRouter router = GoRouter(
     navigatorKey: rootNavigatorKey,
     debugLogDiagnostics: true,
@@ -90,17 +83,6 @@ class AppRouter {
                   );
                 },
               ),
-              // GoRoute(
-              //   name: DetailModalPage.name,
-              //   path: DetailModalPage.path,
-              //   parentNavigatorKey: rootNavigatorKey,
-              //   pageBuilder: (BuildContext context, GoRouterState state) {
-              //     return const MaterialPage<void>(
-              //       fullscreenDialog: true,
-              //       child: DetailModalPage(),
-              //     );
-              //   },
-              // ),
             ],
           ),
         ],
@@ -133,16 +115,12 @@ class AppRouter {
   );
 }
 
-/// The [ScaffoldShell] is a [StatelessWidget] that uses the [AdaptiveScaffold]
-/// to create a shell for the application.
 class ScaffoldShell extends StatelessWidget {
-  /// Create a new instance of [AppScaffoldShell]
   const ScaffoldShell({
     required this.navigationShell,
     super.key,
   });
 
-  /// The navigation shell to use with the navigation.
   final StatefulNavigationShell navigationShell;
 
   @override
