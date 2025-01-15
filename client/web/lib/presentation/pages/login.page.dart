@@ -29,6 +29,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void initState() {
+    _usernameController = TextEditingController();
+    _passwordController = TextEditingController();
     _isPasswordVisible = ValueNotifier<bool>(false);
     super.initState();
   }
