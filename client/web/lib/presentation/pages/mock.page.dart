@@ -156,7 +156,7 @@ class _SimulationFormState extends State<_SimulationForm> with AutomaticKeepAliv
                             (doc) {
                               return MenuItem(
                                 text: doc.path,
-                                icon: Icons.add,
+                                icon: CupertinoIcons.function,
                                 onPressed: (context) {
                                   context.read<MockCubit>().addFunction(doc);
                                 },
